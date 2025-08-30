@@ -11,7 +11,6 @@ import {
 
 import Reaction from "../components/reaction";
 
-
 export default function UserPosts() {
   const [posts, setPosts] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
@@ -64,7 +63,6 @@ export default function UserPosts() {
   return (
     <div className="user-posts-container">
       <h2>User Posts</h2>
-      <p>Here you can view and manage your posts.</p>
 
       {/* Floating Button */}
       <button className="floating-btn" onClick={() => setShowPostForm(true)}>
@@ -104,7 +102,11 @@ export default function UserPosts() {
               />
               Post anonymously
             </label>
-            <button className="post-btn" onClick={handleAddPost} disabled={loading}>
+            <button
+              className="post-btn"
+              onClick={handleAddPost}
+              disabled={loading}
+            >
               {loading ? "Posting..." : "Post"}
             </button>
           </div>
@@ -123,8 +125,11 @@ export default function UserPosts() {
               </small>
             )}
             <br />
-            <small style={{ color: "#8faed1" }}>— {post.author || "Anonymous"}</small>
-            <Reaction />
+            <small style={{ color: "#8faed1" }}>
+              — {post.author || "Anonymous"}
+            </small>
+            {/* ✅ FIX: Pass post.id here */}
+            <Reaction postId={post.id} />
           </div>
         ))}
       </div>
@@ -144,19 +149,31 @@ export default function UserPosts() {
           position: fixed;
           bottom: 20px;
           right: 20px;
-          width: 55px;
-          height: 55px;
-          background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
           color: white;
           border: none;
           border-radius: 50%;
           font-size: 2rem;
+          font-weight: bold;
           cursor: pointer;
-          box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
-          transition: transform 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0px 6px 20px rgba(76, 141, 212, 0.6),
+                      0px 0px 15px rgba(76, 141, 212, 0.4) inset;
+          transition: all 0.25s ease-in-out;
+          overflow: hidden;
         }
         .floating-btn:hover {
-          transform: scale(1.1);
+          transform: scale(1.15) rotate(8deg);
+          box-shadow: 0px 8px 25px rgba(76, 141, 212, 0.8),
+                      0px 0px 20px rgba(76, 141, 212, 0.6) inset;
+        }
+        .floating-btn:active {
+          transform: scale(0.95);
+          box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
         }
         .overlay {
           position: fixed;
@@ -214,11 +231,6 @@ export default function UserPosts() {
           color: #bcd2f5;
           margin-right: 10px;
           width: fit-content;
-        }
-        checkbox {
-        boeder: 1px solid #ccc;
-        background-color: transparent;
-        
         }
         .post-btn {
           padding: 0.6rem 1.2rem;

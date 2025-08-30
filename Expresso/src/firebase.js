@@ -7,15 +7,14 @@ import { getFirestore } from "firebase/firestore";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyClte2HKVO8I7SWF7tR_fO81g2cMD8bnBc",
-  authDomain: "epresso-bb188.firebaseapp.com",
-  projectId: "epresso-bb188",
-  storageBucket: "epresso-bb188.firebasestorage.app",
-  messagingSenderId: "872048451321",
-  appId: "1:872048451321:web:6be4ff4a9de3c29ccecc28",
-  measurementId: "G-502R4QPNNQ"
+  apiKey: "AIzaSyBJm9zoegmjc0wDMWK2aaoHu_kHfElx2Lk",
+  authDomain: "expresso-b7f8d.firebaseapp.com",
+  projectId: "expresso-b7f8d",
+  storageBucket: "expresso-b7f8d.firebasestorage.app",
+  messagingSenderId: "475947216350",
+  appId: "1:475947216350:web:2eedba4985743468ca014f",
+  measurementId: "G-9CLG2YLX9S"
 };
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
