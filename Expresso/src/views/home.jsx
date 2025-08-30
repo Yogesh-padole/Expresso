@@ -59,7 +59,7 @@ export default function Home() {
           margin: 0;
           padding: 0;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background-color: #121212;
+          background-color: #24333dff;
           color: white;
         }
 
@@ -67,9 +67,10 @@ export default function Home() {
           padding: 40px 20px;
           max-width: 960px;
           margin: 0 auto;
-          background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+          
           border-radius: 10px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          
         }
 
         .hero-section {
