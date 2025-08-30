@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -22,6 +23,7 @@ export default function MyPosts() {
   const [tags, setTags] = useState("");
   const [hideIdentity, setHideIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // ✅ Fetch only current user's posts
   useEffect(() => {
@@ -87,8 +89,8 @@ export default function MyPosts() {
     <>
       <Header />
       <div className="my-posts-container">
-        <h2>My Posts</h2>
-        <p>Here you can add and manage your posts.</p>
+        <h2>📌 My Posts</h2>
+        <p className="subtitle">Add, manage, and view your stories here.</p>
 
         {/* Floating Add Button */}
         <button className="floating-btn" onClick={() => setShowPostForm(true)}>
@@ -105,7 +107,7 @@ export default function MyPosts() {
               >
                 ✖
               </button>
-              <h3>Create a Story</h3>
+              <h3>✍️ Create a Story</h3>
               <input
                 type="text"
                 placeholder="Title / Caption"
@@ -136,7 +138,7 @@ export default function MyPosts() {
                 onClick={handleAddPost}
                 disabled={loading}
               >
-                {loading ? "Posting..." : "Post"}
+                {loading ? "Posting..." : "🚀 Publish"}
               </button>
             </div>
           </div>
@@ -145,10 +147,10 @@ export default function MyPosts() {
         {/* User Posts List */}
         <div className="posts-list">
           {posts.length === 0 ? (
-            <p>No posts yet. Start by adding one!</p>
+            <p className="no-posts">✨ No posts yet. Start by adding one!</p>
           ) : (
             posts.map((post) => (
-              <div className="post" key={post.id}>
+              <div className="post-card" key={post.id}>
                 <div className="post-header">
                   <h4>{post.title}</h4>
                   <button
@@ -159,39 +161,49 @@ export default function MyPosts() {
                   </button>
                 </div>
                 <p>{post.content}</p>
-                {post.tags && (
-                  <small style={{ color: "#9ec8ff" }}>
-                    Tags: {post.tags.join(", ")}
+                {post.tags && post.tags.length > 0 && (
+                  <small className="tags">
+                    #{post.tags.join(" #")}
                   </small>
                 )}
                 <br />
-                <small style={{ color: "#8faed1" }}>
-                  — {post.author || "Anonymous"}
-                </small>
+                <small className="author">✍️ {post.author || "Anonymous"}</small>
               </div>
             ))
           )}
         </div>
+
+        {/* ✅ Navigate to Dashboard */}
+        <button className="dashboard-btn" onClick={() => navigate("/dashboard")}>
+          🌍 Go to Public Posts
+        </button>
       </div>
 
       {/* Styles */}
       <style>{`
         .my-posts-container {
-          max-width: 700px;
+          max-width: 750px;
           margin: auto;
-          padding: 1rem;
+          padding: 1.5rem;
           position: relative;
           color: #dce7f3;
+          text-align: center;
         }
-        h2, h3 {
+        h2 {
           color: #a8c9ff;
+          margin-bottom: 0.3rem;
+        }
+        .subtitle {
+          font-size: 0.95rem;
+          color: #9dbce2;
+          margin-bottom: 1rem;
         }
         .floating-btn {
           position: fixed;
-          bottom: 20px;
-          right: 20px;
-          width: 60px;
-          height: 60px;
+          bottom: 25px;
+          right: 25px;
+          width: 65px;
+          height: 65px;
           background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
           color: white;
           border: none;
@@ -205,9 +217,10 @@ export default function MyPosts() {
           box-shadow: 0px 6px 20px rgba(76, 141, 212, 0.6),
                       0px 0px 15px rgba(76, 141, 212, 0.4) inset;
           transition: all 0.25s ease-in-out;
+          z-index: 100;
         }
         .floating-btn:hover {
-          transform: scale(1.15) rotate(8deg);
+          transform: scale(1.2) rotate(10deg);
           box-shadow: 0px 8px 25px rgba(76, 141, 212, 0.8),
                       0px 0px 20px rgba(76, 141, 212, 0.6) inset;
         }
@@ -224,14 +237,19 @@ export default function MyPosts() {
           backdrop-filter: blur(4px);
         }
         .post-modal {
-          background: rgba(25, 40, 70, 0.9);
+          background: rgba(25, 40, 70, 0.95);
           padding: 1.5rem;
-          border-radius: 12px;
+          border-radius: 14px;
           width: 90%;
           max-width: 500px;
           position: relative;
-          box-shadow: 0px 8px 20px rgba(0,0,0,0.4);
+          box-shadow: 0px 10px 25px rgba(0,0,0,0.4);
           border: 1px solid rgba(255,255,255,0.1);
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from {opacity: 0; transform: scale(0.95);}
+          to {opacity: 1; transform: scale(1);}
         }
         .close-btn {
           position: absolute;
@@ -246,18 +264,18 @@ export default function MyPosts() {
         input, textarea {
           width: 100%;
           margin-bottom: 0.8rem;
-          padding: 0.6rem;
+          padding: 0.7rem;
           border-radius: 8px;
           border: 1px solid rgba(255,255,255,0.2);
           font-size: 1rem;
-          background: rgba(255,255,255,0.05);
+          background: rgba(255,255,255,0.07);
           color: #e5f0ff;
         }
         input::placeholder, textarea::placeholder {
           color: #a6b9d6;
         }
         textarea {
-          height: 80px;
+          height: 90px;
         }
         .anon-toggle {
           display: flex;
@@ -267,21 +285,40 @@ export default function MyPosts() {
           color: #bcd2f5;
         }
         .post-btn {
-          padding: 0.6rem 1.2rem;
+          width: 100%;
+          padding: 0.7rem;
           border: none;
           background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
           color: white;
           border-radius: 8px;
           cursor: pointer;
           font-weight: bold;
+          transition: 0.25s;
         }
-        .posts-list .post {
-          background: rgba(20, 35, 60, 0.7);
-          border: 1px solid rgba(255,255,255,0.1);
-          padding: 0.8rem;
-          margin-bottom: 0.5rem;
-          border-radius: 8px;
-          box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+        .post-btn:hover {
+          background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
+          transform: translateY(-2px);
+        }
+        .posts-list {
+          margin-top: 1.5rem;
+        }
+        .no-posts {
+          color: #aabbd6;
+          font-style: italic;
+        }
+        .post-card {
+          background: rgba(20, 35, 60, 0.8);
+          border: 1px solid rgba(255,255,255,0.08);
+          padding: 1rem;
+          margin-bottom: 1rem;
+          border-radius: 12px;
+          box-shadow: 0px 3px 10px rgba(0,0,0,0.2);
+          transition: all 0.25s ease;
+          text-align: left;
+        }
+        .post-card:hover {
+          transform: scale(1.02);
+          box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
         }
         .post-header {
           display: flex;
@@ -300,13 +337,37 @@ export default function MyPosts() {
           transform: scale(1.2);
           color: #ff4b4b;
         }
-        .posts-list .post h4 {
+        .post-card h4 {
           margin-bottom: 0.3rem;
           color: #a8c9ff;
         }
-        .posts-list .post p {
-          margin-bottom: 0.3rem;
+        .post-card p {
+          margin-bottom: 0.5rem;
           color: #d4e3f7;
+          line-height: 1.5;
+        }
+        .tags {
+          color: #9ec8ff;
+        }
+        .author {
+          display: block;
+          margin-top: 0.3rem;
+          color: #8faed1;
+        }
+        .dashboard-btn {
+          margin-top: 1rem;
+          padding: 0.7rem 1.2rem;
+          border: none;
+          border-radius: 8px;
+          background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+          transition: 0.25s;
+        }
+        .dashboard-btn:hover {
+          background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
+          transform: translateY(-2px);
         }
       `}</style>
     </>

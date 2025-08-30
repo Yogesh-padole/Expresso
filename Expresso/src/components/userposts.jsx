@@ -20,7 +20,7 @@ export default function UserPosts() {
   const [hideIdentity, setHideIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Fetch posts in real-time
+  // ✅ Fetch posts in real-time
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -29,7 +29,7 @@ export default function UserPosts() {
     return () => unsubscribe();
   }, []);
 
-  // Add post
+  // ✅ Add new post
   const handleAddPost = async () => {
     if (!content.trim() || !title.trim()) return;
 
@@ -62,7 +62,8 @@ export default function UserPosts() {
 
   return (
     <div className="user-posts-container">
-      <h2>User Posts</h2>
+      <h2>Public Posts</h2>
+      <p>Read stories from the community or share your own.</p>
 
       {/* Floating Button */}
       <button className="floating-btn" onClick={() => setShowPostForm(true)}>
@@ -115,25 +116,32 @@ export default function UserPosts() {
 
       {/* Posts List */}
       <div className="posts-list">
-        {posts.map((post) => (
-          <div className="post" key={post.id}>
-            <h4>{post.title}</h4>
-            <p>{post.content}</p>
-            {post.tags && (
-              <small style={{ color: "#9ec8ff" }}>
-                Tags: {post.tags.join(", ")}
+        {posts.length === 0 ? (
+          <p>No posts yet. Be the first to share something!</p>
+        ) : (
+          posts.map((post) => (
+            <div className="post" key={post.id}>
+              <div className="post-header">
+                <h4>{post.title}</h4>
+              </div>
+              <p>{post.content}</p>
+              {post.tags && (
+                <small className="post-tags">
+                  Tags: {post.tags.join(", ")}
+                </small>
+              )}
+              <br />
+              <small className="post-author">
+                — {post.author || "Anonymous"}
               </small>
-            )}
-            <br />
-            <small style={{ color: "#8faed1" }}>
-              — {post.author || "Anonymous"}
-            </small>
-            {/* ✅ FIX: Pass post.id here */}
-            <Reaction postId={post.id} />
-          </div>
-        ))}
+              {/* ✅ Like/Reaction */}
+              <Reaction postId={post.id} />
+            </div>
+          ))
+        )}
       </div>
 
+      {/* Styles */}
       <style>{`
         .user-posts-container {
           max-width: 700px;
@@ -142,8 +150,13 @@ export default function UserPosts() {
           position: relative;
           color: #dce7f3;
         }
-        h2, h3 {
+        h2 {
           color: #a8c9ff;
+          margin-bottom: 0.2rem;
+        }
+        p {
+          margin-bottom: 1.2rem;
+          color: #bcd2f5;
         }
         .floating-btn {
           position: fixed;
@@ -164,16 +177,11 @@ export default function UserPosts() {
           box-shadow: 0px 6px 20px rgba(76, 141, 212, 0.6),
                       0px 0px 15px rgba(76, 141, 212, 0.4) inset;
           transition: all 0.25s ease-in-out;
-          overflow: hidden;
         }
         .floating-btn:hover {
           transform: scale(1.15) rotate(8deg);
           box-shadow: 0px 8px 25px rgba(76, 141, 212, 0.8),
                       0px 0px 20px rgba(76, 141, 212, 0.6) inset;
-        }
-        .floating-btn:active {
-          transform: scale(0.95);
-          box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
         }
         .overlay {
           position: fixed;
@@ -188,7 +196,7 @@ export default function UserPosts() {
           backdrop-filter: blur(4px);
         }
         .post-modal {
-          background: rgba(25, 40, 70, 0.9);
+          background: rgba(25, 40, 70, 0.95);
           padding: 1.5rem;
           border-radius: 12px;
           width: 90%;
@@ -229,8 +237,6 @@ export default function UserPosts() {
           gap: 0.5rem;
           margin-bottom: 1rem;
           color: #bcd2f5;
-          margin-right: 10px;
-          width: fit-content;
         }
         .post-btn {
           padding: 0.6rem 1.2rem;
@@ -246,9 +252,14 @@ export default function UserPosts() {
           background: rgba(20, 35, 60, 0.7);
           border: 1px solid rgba(255,255,255,0.1);
           padding: 0.8rem;
-          margin-bottom: 0.5rem;
-          border-radius: 8px;
+          margin-bottom: 0.8rem;
+          border-radius: 10px;
           box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .posts-list .post:hover {
+          transform: translateY(-3px);
+          box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
         }
         .posts-list .post h4 {
           margin-bottom: 0.3rem;
@@ -257,6 +268,12 @@ export default function UserPosts() {
         .posts-list .post p {
           margin-bottom: 0.3rem;
           color: #d4e3f7;
+        }
+        .post-tags {
+          color: #9ec8ff;
+        }
+        .post-author {
+          color: #8faed1;
         }
       `}</style>
     </div>

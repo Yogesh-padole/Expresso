@@ -78,7 +78,7 @@ export default function Header() {
             {username ? (
               <>
                 <span className="username">
-                  Hi, <strong><Link to="/profile" className="username-link">{username}</Link></strong>
+                  Hi, <strong><Link to="/myprofile" className="username-link">{username}</Link></strong>
                 </span>
                 <button onClick={handleLogout} className="btn logout-btn">Logout</button>
               </>
