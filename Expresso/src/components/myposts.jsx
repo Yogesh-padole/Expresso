@@ -162,9 +162,7 @@ export default function MyPosts() {
                 </div>
                 <p>{post.content}</p>
                 {post.tags && post.tags.length > 0 && (
-                  <small className="tags">
-                    #{post.tags.join(" #")}
-                  </small>
+                  <small className="tags">#{post.tags.join(" #")}</small>
                 )}
                 <br />
                 <small className="author">✍️ {post.author || "Anonymous"}</small>
@@ -355,19 +353,26 @@ export default function MyPosts() {
           color: #8faed1;
         }
         .dashboard-btn {
-          margin-top: 1rem;
-          padding: 0.7rem 1.2rem;
+          position: fixed;
+          bottom: 25px;
+          left: 25px;
+          padding: 0.8rem 1.3rem;
           border: none;
-          border-radius: 8px;
+          border-radius: 10px;
           background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
           color: white;
           font-weight: bold;
           cursor: pointer;
-          transition: 0.25s;
+          transition: all 0.25s ease-in-out;
+          box-shadow: 0px 6px 18px rgba(76, 141, 212, 0.6),
+                      0px 0px 15px rgba(76, 141, 212, 0.4) inset;
+          z-index: 100;
         }
         .dashboard-btn:hover {
           background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
-          transform: translateY(-2px);
+          transform: scale(1.08) translateY(-2px);
+          box-shadow: 0px 8px 25px rgba(76, 141, 212, 0.8),
+                      0px 0px 20px rgba(76, 141, 212, 0.6) inset;
         }
       `}</style>
     </>

@@ -6,6 +6,8 @@ import Login from './routes/login'
 import Dashboard from './views/dashboard';
 import Posts from './components/myposts';
 import Myprofile from './components/myprofile';
+import Saved from './components/saved';
+import TagPosts from './components/tagposts';
 
 
 
@@ -24,6 +26,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/myposts" element={<Posts />} />
         <Route path="/myprofile" element={<Myprofile />} />
+        <Route path="/saved" element={<Saved />} />
+        <Route path="/tags/:tag" element={<TagPosts />} /> 
       </Routes>
     </Router>
   );
