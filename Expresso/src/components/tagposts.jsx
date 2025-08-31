@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
 import {
   collection,
-  addDoc,
   query,
+  where,
   orderBy,
   onSnapshot,
+  addDoc,
   serverTimestamp,
 } from "firebase/firestore";
-
 import Reaction from "../components/reaction";
-import { Link } from "react-router-dom";
 
-// ✅ Predefined Tags (same set used in Header)
+// ✅ Same predefined tags
 const availableTags = [
   "collegevibes",
   "friendshipgoals",
@@ -28,23 +28,33 @@ const availableTags = [
   "lovestory",
 ];
 
-export default function UserPosts() {
+export default function TagPosts() {
+  const { tag } = useParams(); 
   const [posts, setPosts] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([tag]); // default select current tag
   const [hideIdentity, setHideIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch posts in real-time
+  const navigate = useNavigate();
+
+  // ✅ Fetch posts by tag
   useEffect(() => {
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    if (!tag) return;
+    const q = query(
+      collection(db, "posts"),
+      where("tags", "array-contains", tag),
+      orderBy("createdAt", "desc")
+    );
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
+
     return () => unsubscribe();
-  }, []);
+  }, [tag]);
 
   // ✅ Add new post
   const handleAddPost = async () => {
@@ -68,7 +78,7 @@ export default function UserPosts() {
       });
       setTitle("");
       setContent("");
-      setSelectedTags([]);
+      setSelectedTags([tag]);
       setHideIdentity(false);
       setShowPostForm(false);
     } catch (error) {
@@ -78,18 +88,23 @@ export default function UserPosts() {
   };
 
   // ✅ Toggle selected tags
-  const toggleTag = (tag) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
+  const toggleTag = (t) => {
+    if (selectedTags.includes(t)) {
+      setSelectedTags(selectedTags.filter((x) => x !== t));
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      setSelectedTags([...selectedTags, t]);
     }
   };
 
   return (
-    <div className="user-posts-container">
-      <h2>Public Posts</h2>
-      <p>Read stories from the community or share your own.</p>
+    <div className="tag-posts-container">
+      <div className="tag-header">
+        <h2>#{tag}</h2>
+        <p>Explore posts related to <strong>{tag}</strong></p>
+        <button className="back-btn" onClick={() => navigate("/dashboard")}>
+          ⬅ Go to Public Posts
+        </button>
+      </div>
 
       {/* Floating Button */}
       <button className="floating-btn" onClick={() => setShowPostForm(true)}>
@@ -120,16 +135,14 @@ export default function UserPosts() {
             <div className="tag-selector">
               <p>Select Tags:</p>
               <div className="tags-grid">
-                {availableTags.map((tag) => (
+                {availableTags.map((t) => (
                   <button
-                    key={tag}
+                    key={t}
                     type="button"
-                    className={`tag-btn ${
-                      selectedTags.includes(tag) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleTag(tag)}
+                    className={`tag-btn ${selectedTags.includes(t) ? "selected" : ""}`}
+                    onClick={() => toggleTag(t)}
                   >
-                    #{tag}
+                    #{t}
                   </button>
                 ))}
               </div>
@@ -154,37 +167,28 @@ export default function UserPosts() {
         </div>
       )}
 
-      {/* Posts List */}
       <div className="posts-list">
         {posts.length === 0 ? (
-          <p>No posts yet. Be the first to share something!</p>
+          <p>No posts yet under #{tag}. Be the first!</p>
         ) : (
           posts.map((post) => (
             <div className="post" key={post.id}>
-              <div className="post-header">
-                <h4>{post.title}</h4>
-              </div>
+              <h4>{post.title}</h4>
               <p>{post.content}</p>
 
-              {post.tags && post.tags.length > 0 && (
+              {/* Show tags */}
+              {post.tags?.length > 0 && (
                 <small className="post-tags">
                   Tags:{" "}
-                  {post.tags.map((tag) => (
-                    <Link
-                      key={tag}
-                      to={`/tags/${tag}`}
-                      className="tag-link"
-                    >
-                      #{tag}
+                  {post.tags.map((t) => (
+                    <Link key={t} to={`/tags/${t}`} className="tag-link">
+                      #{t}
                     </Link>
                   ))}
                 </small>
               )}
               <br />
-              <small className="post-author">
-                — {post.author || "Anonymous"}
-              </small>
-              {/* ✅ Like/Reaction */}
+              <small className="post-author">— {post.author || "Anonymous"}</small>
               <Reaction postId={post.id} />
             </div>
           ))
@@ -193,20 +197,34 @@ export default function UserPosts() {
 
       {/* Styles */}
       <style>{`
-        .user-posts-container {
+        .tag-posts-container {
           max-width: 700px;
           margin: auto;
           padding: 1rem;
-          position: relative;
           color: #dce7f3;
+          position: relative;
+        }
+        .tag-header {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-bottom: 1.2rem;
         }
         h2 {
           color: #a8c9ff;
-          margin-bottom: 0.2rem;
         }
         p {
-          margin-bottom: 1.2rem;
           color: #bcd2f5;
+        }
+        .back-btn {
+          align-self: flex-start;
+          padding: 0.5rem 1rem;
+          border: none;
+          background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
+          color: white;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
         }
         .floating-btn {
           position: fixed;
@@ -275,13 +293,70 @@ export default function UserPosts() {
           background: rgba(255,255,255,0.05);
           color: #e5f0ff;
         }
-        input::placeholder, textarea::placeholder {
-          color: #a6b9d6;
-        }
         textarea {
           height: 80px;
         }
-        .anon-toggle {
+        .tag-selector p {
+          color: #bcd2f5;
+          margin-bottom: 0.5rem;
+        }
+        .tags-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 1rem;
+        }
+        .tag-btn {
+          padding: 5px 10px;
+          border-radius: 20px;
+          border: 1px solid #4c8dd4;
+          background: transparent;
+          color: #a8c9ff;
+          cursor: pointer;
+          font-size: 0.9rem;
+        }
+        .tag-btn.selected {
+          background: #4c8dd4;
+          color: white;
+        }
+        .post-btn {
+          padding: 0.6rem 1.2rem;
+          border: none;
+          background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
+          color: white;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+          box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        }
+        .posts-list .post {
+          background: rgba(20, 35, 60, 0.7);
+          border: 1px solid rgba(255,255,255,0.1);
+          padding: 0.8rem;
+          margin-bottom: 0.8rem;
+          border-radius: 10px;
+          box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .posts-list .post:hover {
+          transform: translateY(-3px);
+          box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+        }
+        .post-tags {
+          color: #9ec8ff;
+        }
+        .tag-link {
+          color: #9ec8ff;
+          margin-right: 6px;
+          text-decoration: none;
+        }
+        .tag-link:hover {
+          text-decoration: underline;
+        }
+        .post-author {
+          color: #8faed1;
+        }
+                  .anon-toggle {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -326,75 +401,6 @@ export default function UserPosts() {
 .anon-toggle input[type="checkbox"]:checked::before {
   transform: translateX(20px);
 }
-
-        .post-btn {
-          padding: 0.6rem 1.2rem;
-          border: none;
-          background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
-          color: white;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: bold;
-          box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-        }
-        .tag-selector p {
-          color: #bcd2f5;
-          margin-bottom: 0.5rem;
-        }
-        .tags-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-bottom: 1rem;
-        }
-        .tag-btn {
-          padding: 5px 10px;
-          border-radius: 20px;
-          border: 1px solid #4c8dd4;
-          background: transparent;
-          color: #a8c9ff;
-          cursor: pointer;
-          font-size: 0.9rem;
-        }
-        .tag-btn.selected {
-          background: #4c8dd4;
-          color: white;
-        }
-        .posts-list .post {
-          background: rgba(20, 35, 60, 0.7);
-          border: 1px solid rgba(255,255,255,0.1);
-          padding: 0.8rem;
-          margin-bottom: 0.8rem;
-          border-radius: 10px;
-          box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .posts-list .post:hover {
-          transform: translateY(-3px);
-          box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
-        }
-        .posts-list .post h4 {
-          margin-bottom: 0.3rem;
-          color: #a8c9ff;
-        }
-        .posts-list .post p {
-          margin-bottom: 0.3rem;
-          color: #d4e3f7;
-        }
-        .post-tags {
-          color: #9ec8ff;
-        }
-        .tag-link {
-          color: #9ec8ff;
-          margin-right: 6px;
-          text-decoration: none;
-        }
-        .tag-link:hover {
-          text-decoration: underline;
-        }
-        .post-author {
-          color: #8faed1;
-        }
       `}</style>
     </div>
   );

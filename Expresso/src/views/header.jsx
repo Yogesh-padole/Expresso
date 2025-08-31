@@ -7,8 +7,10 @@ import { db } from "../firebase";
 export default function Header() {
   const [username, setUsername] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [tagsOpen, setTagsOpen] = useState(false);
   const auth = getAuth();
   const dropdownRef = useRef();
+  const tagsRef = useRef();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,8 +37,14 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setDropdownOpen(false);
+      }
+      if (tagsRef.current && !tagsRef.current.contains(event.target)) {
+        setTagsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -57,20 +65,81 @@ export default function Header() {
           <div className="left-group" ref={dropdownRef}>
             {/* Dropend menu */}
             <div className="dropend">
-              <button className="dropend-toggle" onClick={() => setDropdownOpen(!dropdownOpen)}>
+              <button
+                className="dropend-toggle"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
                 ☰
               </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu">
-                  <li><Link to="/myposts">Myposts</Link></li>
-                  <li><Link to="/setting">Settings</Link></li>
-                  <li><Link to="/myprofile">My Profile</Link></li>
+                  <li>
+                    <Link to="/myposts">Myposts</Link>
+                  </li>
+                  <li>
+                    <Link to="/saved">Saved Posts</Link>
+                  </li>
+                  <li>
+                    <Link to="/myprofile">My Profile</Link>
+                  </li>
                 </ul>
               )}
             </div>
 
             {/* Brand */}
-            <Link className="navbar-brand" to="/">Expresso</Link>
+            <Link className="navbar-brand" to="/">
+              Expresso
+            </Link>
+
+            {/* Tags Dropdown */}
+            <div className="dropend" ref={tagsRef}>
+              <button
+                className="dropend-toggle"
+                onClick={() => setTagsOpen(!tagsOpen)}
+              >
+                Explore Tags ▼
+              </button>
+              {tagsOpen && (
+                <ul className="dropdown-menu">
+                  <li>
+                    <Link to="/tags/collegevibes">#collegevibes</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/friendshipgoals">#friendshipgoals</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/firstlove">#firstlove</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/familyfirst">#familyfirst</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/memezone">#memezone</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/dreambig">#dreambig</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/travelgram">#travelgram</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/musiclife">#musiclife</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/animeandchill">#animeandchill</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/foodielife">#foodielife</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/mentalpeace">#mentalpeace</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/lovestory">#lovestory</Link>
+                  </li>
+                </ul>
+              )}
+            </div>
           </div>
 
           {/* Right side */}
@@ -78,14 +147,25 @@ export default function Header() {
             {username ? (
               <>
                 <span className="username">
-                  Hi, <strong><Link to="/myprofile" className="username-link">{username}</Link></strong>
+                  Hi,{" "}
+                  <strong>
+                    <Link to="/myprofile" className="username-link">
+                      {username}
+                    </Link>
+                  </strong>
                 </span>
-                <button onClick={handleLogout} className="btn logout-btn">Logout</button>
+                <button onClick={handleLogout} className="btn logout-btn">
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="btn login-btn">Login</Link>
-                <Link to="/register" className="btn register-btn">Register</Link>
+                <Link to="/login" className="btn login-btn">
+                  Login
+                </Link>
+                <Link to="/register" className="btn register-btn">
+                  Register
+                </Link>
               </>
             )}
           </div>
@@ -187,7 +267,7 @@ export default function Header() {
         .dropend-toggle {
           background: none;
           color: white;
-          font-size: 1.6rem;
+          font-size: 1.2rem;
           border: none;
           cursor: pointer;
         }

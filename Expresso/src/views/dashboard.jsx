@@ -17,11 +17,6 @@ export default function Dashboard() {
           <UserPosts />
           
 
-          {/* <div className="dashboard-buttons">
-            <Link to="/myposts" className="btn-outline primary">View My Posts</Link>
-            <Link to="/settings" className="btn-outline secondary">Account Settings</Link>
-          </div> */}
-          
         </div>
       </div>
 
@@ -47,6 +42,8 @@ export default function Dashboard() {
           font-size: 2.8rem;
           font-weight: bold;
           margin-bottom: 20px;
+          margin-top: 50px;
+          text-shadow: 2px 2px 4px rgba(151, 183, 211, 0.5);
         }
 
         .dashboard-subtitle {
