@@ -59,18 +59,33 @@ export default function MyProfile() {
   };
 
   // 🔹 Fetch reports
-  useEffect(() => {
-    if (!user) return;
-    const q = query(
-      collection(db, "reports"),
-      where("reportedBy", "==", user.uid),
-      orderBy("createdAt", "desc")
+ // 🔹 Fetch reports with post details
+useEffect(() => {
+  if (!user) return;
+
+  const q = query(
+    collection(db, "reports"),
+    where("reportedBy", "==", user.uid),
+    orderBy("createdAt", "desc")
+  );
+
+  const unsub = onSnapshot(q, async (snap) => {
+    const reportsData = await Promise.all(
+      snap.docs.map(async (docSnap) => {
+        const report = { id: docSnap.id, ...docSnap.data() };
+        if (report.postId) {
+          const postSnap = await getDoc(doc(db, "posts", report.postId));
+          report.postData = postSnap.exists() ? postSnap.data() : null;
+        }
+        return report;
+      })
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setReports(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => unsub();
-  }, [user]);
+    setReports(reportsData);
+  });
+
+  return () => unsub();
+}, [user]);
+
 
   // 🔹 Fetch diary entries
   useEffect(() => {
@@ -186,27 +201,43 @@ export default function MyProfile() {
 
       {/* Reports Section */}
       {activeTab === "reports" && (
-        <div className="reports-section card">
-          <h3>📑 My Reports</h3>
-          {reports.length === 0 ? (
-            <p>No reports submitted.</p>
+  <div className="reports-section card">
+    <h3>📑 My Reports</h3>
+    {reports.length === 0 ? (
+      <p>No reports submitted.</p>
+    ) : (
+      reports.map((r) => (
+        <div key={r.id} className="report-card sub-card">
+          {r.postData ? (
+            <>
+              <h4>{r.postData.title}</h4>
+              <p>{r.postData.content}</p>
+              {r.postData.tags?.length > 0 && (
+                <p>
+                  {r.postData.tags.map((tag) => (
+                    <span key={tag} className="tag">
+                      #{tag}{" "}
+                    </span>
+                  ))}
+                </p>
+              )}
+              <p>
+                <b>Reported Reason:</b> {r.reason}
+              </p>
+              <small>
+                Reported At:{" "}
+                {r.createdAt?.toDate().toLocaleString() || "Just now"}
+              </small>
+            </>
           ) : (
-            reports.map((r) => (
-              <div key={r.id} className="report-card sub-card">
-                <p>
-                  <b>Type:</b> {r.targetType}
-                </p>
-                <p>
-                  <b>Reason:</b> {r.reason}
-                </p>
-                <p>
-                  <b>Status:</b> {r.status}
-                </p>
-              </div>
-            ))
+            <p>This post has been deleted.</p>
           )}
         </div>
-      )}
+      ))
+    )}
+  </div>
+)}
+
 
       {/* Diary Section */}
       {activeTab === "diary" && (
@@ -296,6 +327,35 @@ export default function MyProfile() {
           margin-bottom: 1rem; 
           justify-content: center;
         }
+
+        .report-card {
+  background: rgba(50, 70, 100, 0.85);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  color: #dce7f3;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.report-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+.report-card h4 {
+  color: #a8c9ff;
+  margin-bottom: 0.5rem;
+}
+.report-card p {
+  margin: 0.3rem 0;
+  line-height: 1.4;
+}
+.report-card .tag {
+  background: rgba(76,141,212,0.2);
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-right: 4px;
+  font-size: 0.85rem;
+}
+
         .tabs button { 
           padding: 0.6rem 1.2rem; 
           cursor: pointer; 
