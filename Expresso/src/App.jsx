@@ -7,9 +7,6 @@ import Dashboard from './views/dashboard';
 import Posts from './components/myposts';
 import Myprofile from './components/myprofile';
 
-
-
-
 import './App.css'
 
 function App() {

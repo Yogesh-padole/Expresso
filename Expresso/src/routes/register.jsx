@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { collection, addDoc, doc, setDoc, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
@@ -28,7 +36,10 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const q = query(collection(db, "users"), where("userId", "==", form.userId));
+      const q = query(
+        collection(db, "users"),
+        where("userId", "==", form.userId)
+      );
       const snap = await getDocs(q);
       if (!snap.empty) {
         alert("Username is already taken. Please choose another.");
@@ -36,7 +47,11 @@ export default function Register() {
         return;
       }
 
-      const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
       const uid = cred.user.uid;
 
       await setDoc(doc(db, "users", uid), {
@@ -101,7 +116,7 @@ export default function Register() {
           </div>
           <br />
 
-          <button type="submit"className="btn" disabled={loading}>
+          <button type="submit" className="btn" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
