@@ -37,10 +37,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
       if (tagsRef.current && !tagsRef.current.contains(event.target)) {
@@ -61,9 +58,9 @@ export default function Header() {
     <>
       <nav className="navbar">
         <div className="nav-flex">
-          {/* Left side */}
+          {/* Left group */}
           <div className="left-group" ref={dropdownRef}>
-            {/* Dropend menu */}
+            {/* Hamburger menu */}
             <div className="dropend">
               <button
                 className="dropend-toggle"
@@ -73,15 +70,17 @@ export default function Header() {
               </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu">
-                  <li>
-                    <Link to="/myposts">Myposts</Link>
-                  </li>
-                  <li>
-                    <Link to="/saved">Saved Posts</Link>
-                  </li>
-                  <li>
-                    <Link to="/myprofile">My Profile</Link>
-                  </li>
+                  <li><Link to="/myposts">Myposts</Link></li>
+                  <li><Link to="/saved">Saved Posts</Link></li>
+                  <li><Link to="/myprofile">My Profile</Link></li>
+                  {/* Logout visible only on mobile */}
+                  {username && (
+                    <li className="mobile-logout-item">
+                      <button className="btn logout-btn" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </li>
+                  )}
                 </ul>
               )}
             </div>
@@ -101,42 +100,18 @@ export default function Header() {
               </button>
               {tagsOpen && (
                 <ul className="dropdown-menu">
-                  <li>
-                    <Link to="/tags/collegevibes">#collegevibes</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/friendshipgoals">#friendshipgoals</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/firstlove">#firstlove</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/familyfirst">#familyfirst</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/memezone">#memezone</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/dreambig">#dreambig</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/travelgram">#travelgram</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/musiclife">#musiclife</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/animeandchill">#animeandchill</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/foodielife">#foodielife</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/mentalpeace">#mentalpeace</Link>
-                  </li>
-                  <li>
-                    <Link to="/tags/lovestory">#lovestory</Link>
-                  </li>
+                  <li><Link to="/tags/collegevibes">#collegevibes</Link></li>
+                  <li><Link to="/tags/friendshipgoals">#friendshipgoals</Link></li>
+                  <li><Link to="/tags/firstlove">#firstlove</Link></li>
+                  <li><Link to="/tags/familyfirst">#familyfirst</Link></li>
+                  <li><Link to="/tags/memezone">#memezone</Link></li>
+                  <li><Link to="/tags/dreambig">#dreambig</Link></li>
+                  <li><Link to="/tags/travelgram">#travelgram</Link></li>
+                  <li><Link to="/tags/musiclife">#musiclife</Link></li>
+                  <li><Link to="/tags/animeandchill">#animeandchill</Link></li>
+                  <li><Link to="/tags/foodielife">#foodielife</Link></li>
+                  <li><Link to="/tags/mentalpeace">#mentalpeace</Link></li>
+                  <li><Link to="/tags/lovestory">#lovestory</Link></li>
                 </ul>
               )}
             </div>
@@ -147,27 +122,18 @@ export default function Header() {
             {username ? (
               <>
                 <span className="username">
-                  Hi,{" "}
-                  <strong>
-                    <Link to="/myprofile" className="username-link">
-                      {username}
-                    </Link>
-                  </strong>
+                  Hi, <strong><Link to="/myprofile" className="username-link">{username}</Link></strong>
                 </span>
-                <button onClick={handleLogout} className="btn logout-btn">
+
+                {/* Desktop logout button */}
+                <button className="btn logout-btn desktop-logout" onClick={handleLogout}>
                   Logout
                 </button>
-
-                
               </>
             ) : (
               <>
-                <Link to="/login" className="btn login-btn">
-                  Login
-                </Link>
-                <Link to="/register" className="btn register-btn">
-                  Register
-                </Link>
+                <Link to="/login" className="btn login-btn">Login</Link>
+                <Link to="/register" className="btn register-btn">Register</Link>
               </>
             )}
           </div>
@@ -185,18 +151,22 @@ export default function Header() {
           z-index: 1000;
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
           border-radius: 0 0 10px 10px;
+          backdrop-filter: blur(6px);
         }
 
         .nav-flex {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          flex-wrap: wrap;
+          gap: 10px;
         }
 
         .left-group {
           display: flex;
           align-items: center;
-          gap: 15px;
+          gap: 10px;
+          flex-wrap: wrap;
         }
 
         .navbar-brand {
@@ -209,11 +179,13 @@ export default function Header() {
         .auth-buttons {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
+          flex-wrap: wrap;
         }
 
         .username {
           margin-right: 10px;
+          font-size: 0.95rem;
         }
 
         .username-link {
@@ -233,86 +205,72 @@ export default function Header() {
           cursor: pointer;
           text-decoration: none;
           transition: all 0.3s;
+          white-space: nowrap;
         }
 
-        .login-btn {
-          background-color: #2980b9;
-          color: white;
-        }
+        .login-btn { background-color: #2980b9; color: white; }
+        .login-btn:hover { background-color: #3498db; }
+        .register-btn { background-color: #2c3e50; color: white; }
+        .register-btn:hover { background-color: #34495e; }
+        .logout-btn { background-color: #c0392b; color: white;display: block; }
+        .logout-btn:hover { background-color: #e74c3c; }
 
-        .login-btn:hover {
-          background-color: #3498db;
-        }
-
-        .register-btn {
-          background-color: #2c3e50;
-          color: white;
-        }
-
-        .register-btn:hover {
-          background-color: #34495e;
-        }
-
-        .logout-btn {
-          background-color: #c0392b;
-          color: white;
-        }
-
-        .logout-btn:hover {
-          background-color: #e74c3c;
-        }
-
-        .dropend {
-          position: relative;
-        }
-
-        .dropend-toggle {
-          background: none;
-          color: white;
-          font-size: 1.2rem;
-          border: none;
-          cursor: pointer;
-        }
+        .dropend { position: relative; }
+        .dropend-toggle { background: none; color: white; font-size: 1.2rem; border: none; cursor: pointer; }
 
         .dropdown-menu {
           position: absolute;
           top: 100%;
           left: 0;
-          margin-top: 10px;
-          background-color: transparent;
-          padding: 10px;
+          margin-top: 8px;
+          background-color: #34495e;
+          padding: 8px;
           border-radius: 5px;
           list-style: none;
           min-width: 140px;
           box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          z-index: 100;
         }
 
-        .dropdown-menu li {
-          margin-bottom: 8px;
-        }
-
-        .dropdown-menu li:last-child {
-          margin-bottom: 0;
-        }
-
-        .dropdown-menu a {
+        .dropdown-menu li { margin-bottom: 6px; }
+        .dropdown-menu li:last-child { margin-bottom: 0; }
+        .dropdown-menu a, .dropdown-menu button {
           color: white;
           text-decoration: none;
           display: block;
+          font-size: 0.9rem;
+          background: none;
+          border: none;
+          width: 100%;
+          text-align: left;
+          padding: 4px 0;
+          cursor: pointer;
+        }
+        .dropdown-menu a:hover, .dropdown-menu button:hover { text-decoration: underline; }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+          .username { display: none; }
+          .desktop-logout { display: none; }
+          .mobile-logout-item { display: block; }
+
+          .navbar { padding: 10px 15px; }
+          .navbar-brand { font-size: 1.8rem; }
+          .btn { padding: 6px 10px; font-size: 0.8rem; }
+          .dropend-toggle { font-size: 5rem; }
+          .dropdown-menu { min-width: 120px; padding: 6px; }
+          .dropdown-menu a, .dropdown-menu button { font-size: 0.85rem; }
+          .nav-flex { flex-direction: column; align-items: flex-start; gap: 8px; }
+          .left-group { gap: 8px; width: 100%; justify-content: flex-start; }
+          .auth-buttons { width: 100%; justify-content: flex-start; gap: 6px; flex-wrap: wrap; }
         }
 
-        .dropdown-menu a:hover {
-          text-decoration: underline;
-        }
-
-        @media (max-width: 600px) {
-          .navbar-brand {
-            font-size: 1.2rem;
-          }
-          .btn {
-            padding: 6px 10px;
-            font-size: 0.8rem;
-          }
+        @media (max-width: 480px) {
+          .navbar-brand { font-size: 1.1rem; }
+          .btn { padding: 5px 8px; font-size: 0.75rem; }
+          .dropend-toggle { font-size: 1.2rem; }
+          .dropdown-menu { min-width: 100px; padding: 5px; }
+          .dropdown-menu a, .dropdown-menu button { font-size: 0.8rem; }
         }
       `}</style>
     </>

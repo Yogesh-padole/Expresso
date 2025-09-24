@@ -139,6 +139,15 @@ export default function UserPosts() {
     }
   };
 
+  const [expandedPosts, setExpandedPosts] = useState([]);
+
+const toggleExpand = (postId) => {
+  setExpandedPosts((prev) =>
+    prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
+  );
+};
+
+
   return (
     <div className="user-posts-container">
       <h2>Public Posts</h2>
@@ -161,12 +170,14 @@ export default function UserPosts() {
               type="text"
               placeholder="Title / Caption"
               value={title}
+              required
               onChange={(e) => setTitle(e.target.value)}
             />
             <textarea
               placeholder="Write your story..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              required
             />
             <div className="tag-selector">
               <p>Select Tags:</p>
@@ -229,7 +240,13 @@ export default function UserPosts() {
                 </div>
               </div>
 
-              <p>{post.content}</p>
+              <p
+  className={`post-content ${expandedPosts.includes(post.id) ? "expanded" : ""}`}
+  onClick={() => toggleExpand(post.id)}
+>
+  {post.content}
+</p>
+
 
               {post.tags && post.tags.length > 0 && (
                 <small className="post-tags">
@@ -252,7 +269,9 @@ export default function UserPosts() {
       </div>
 
       {/* Styles */}
-      <style>{`
+      
+
+<style>{`
   .user-posts-container {
     max-width: 700px;
     margin: auto;
@@ -263,12 +282,50 @@ export default function UserPosts() {
   h2 {
     color: #a8c9ff;
     margin-bottom: 0.2rem;
+    margin-top:-20px;
+    font-size: 1.8rem;
   }
 
   p {
     margin-bottom: 1.2rem;
     color: #bcd2f5;
+    font-size: 1rem;
   }
+    /* Default post text */
+.post-content {
+  color: #d4e3f7;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Mobile truncated view */
+@media (max-width: 600px) {
+  .post-content {
+    display: -webkit-box;
+    -webkit-line-clamp: 8;   /* show only 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .post-content::after {
+    content: " ... Read more";
+    color: #9ec8ff;
+    font-size: 0.85rem;
+  }
+
+  .post-content.expanded {
+    display: block; /* show full text */
+  }
+
+  .post-content.expanded::after {
+    content: "";
+  }
+}
+
 
   .floating-btn {
     position: fixed;
@@ -288,6 +345,7 @@ export default function UserPosts() {
     box-shadow: 0px 6px 20px rgba(76,141,212,0.6),
                 0px 0px 15px rgba(76,141,212,0.4) inset;
     transition: all 0.25s ease-in-out;
+    z-index: 100;
   }
 
   .floating-btn:hover {
@@ -305,13 +363,14 @@ export default function UserPosts() {
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 1rem;
   }
 
   .post-modal {
     background: rgba(25,40,70,0.95);
     padding: 1.5rem;
     border-radius: 12px;
-    width: 90%;
+    width: 100%;
     max-width: 500px;
     position: relative;
     box-shadow: 0px 8px 20px rgba(0,0,0,0.4);
@@ -337,10 +396,13 @@ export default function UserPosts() {
     border: 1px solid rgba(255,255,255,0.2);
     background: rgba(255,255,255,0.05);
     color: #e5f0ff;
+    font-size: 1rem;
+    box-sizing: border-box;
   }
 
   textarea {
     height: 80px;
+    resize: vertical;
   }
 
   .post-btn {
@@ -351,17 +413,20 @@ export default function UserPosts() {
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
+    width: 100%;
+    font-size: 1rem;
   }
 
   .tag-selector p {
     color: #bcd2f5;
     margin-bottom: 0.5rem;
+    font-size: 0.95rem;
   }
 
   .tags-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 1rem;
   }
 
@@ -372,7 +437,7 @@ export default function UserPosts() {
     background: transparent;
     color: #a8c9ff;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .tag-btn.selected {
@@ -386,14 +451,14 @@ export default function UserPosts() {
     gap: 10px;
     margin-bottom: 1rem;
     color: #bcd2f5;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
   }
 
   .anon-toggle input[type="checkbox"] {
     appearance: none;
-    width: 40px;
-    height: 20px;
+    width: 36px;
+    height: 18px;
     background: #3b6fa5;
     border-radius: 20px;
     position: relative;
@@ -405,8 +470,8 @@ export default function UserPosts() {
   .anon-toggle input[type="checkbox"]::before {
     content: "";
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     top: 2px;
     left: 2px;
@@ -414,12 +479,8 @@ export default function UserPosts() {
     transition: transform 0.3s ease;
   }
 
-  .anon-toggle input[type="checkbox"]:checked {
-    background: #4c8dd4;
-  }
-
   .anon-toggle input[type="checkbox"]:checked::before {
-    transform: translateX(20px);
+    transform: translateX(18px);
   }
 
   .posts-list .post {
@@ -429,20 +490,24 @@ export default function UserPosts() {
     margin-bottom: 0.8rem;
     border-radius: 10px;
     position: relative;
+    word-break: break-word;
   }
 
   .posts-list .post h4 {
     margin-bottom: 0.3rem;
     color: #a8c9ff;
+    font-size: 1.1rem;
   }
 
   .posts-list .post p {
     margin-bottom: 0.3rem;
     color: #d4e3f7;
+    font-size: 0.95rem;
   }
 
   .post-tags {
     color: #9ec8ff;
+    font-size: 0.85rem;
   }
 
   .tag-link {
@@ -457,9 +522,9 @@ export default function UserPosts() {
 
   .post-author {
     color: #8faed1;
+    font-size: 0.8rem;
   }
 
-  /* Three dots menu */
   .menu-wrapper {
     position: absolute;
     top: 10px;
@@ -470,42 +535,109 @@ export default function UserPosts() {
   .menu-btn {
     background: none;
     border: none;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     cursor: pointer;
     color: #bcd2f5;
   }
 
+.menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 25px;
+  background: #2b3e5c;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  z-index: 10;
+  
+  display: flex;        
+  flex-direction: row;   
+  gap: 8px;              
+  align-items: center;
+}
+
+.menu-dropdown button {
+  display: inline-block;  
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: none;
+  text-align: center;
+  color: #dce7f3;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;    
+}
+
+.menu-dropdown button:hover:not(:disabled) {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+}
+
+
+  /* Mobile responsiveness improvements */
+@media (max-width: 600px) {
+  .user-posts-container {
+    padding: 0.5rem;
+  }
+
+  .post-modal {
+    padding: 1rem;
+    max-width: 95%;
+  }
+
+  .post-btn {
+    font-size: 0.95rem;
+  }
+
+  .tag-btn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .posts-list .post h4 {
+    font-size: 1rem;
+  }
+
+  .posts-list .post p {
+    font-size: 0.9rem;
+  }
+
+  .post-tags {
+    font-size: 0.75rem;
+  }
+
+  .post-author {
+    font-size: 0.7rem;
+  }
+
+  /* Mobile menu improvements */
   .menu-dropdown {
-    position: absolute;
     right: 0;
-    top: 25px;
-    background: #2b3e5c;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    padding: 0.3rem 0;
-    z-index: 10;
+    top: 30px;
+    min-width: 120px; /* bigger click area */
+    padding: 0.5rem 0;
+    border-radius: 8px;
   }
 
   .menu-dropdown button {
-    display: block;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem; /* more tappable */
     width: 100%;
-    padding: 0.4rem 1rem;
-    background: transparent;
-    border: none;
     text-align: left;
-    color: #dce7f3;
-    cursor: pointer;
+  }
+
+  .menu-btn {
+    font-size: 1.4rem; /* slightly bigger on mobile */
+    padding: 4px;
   }
 
   .menu-dropdown button:hover:not(:disabled) {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.15);
   }
+}
 
-  .menu-dropdown button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
 `}</style>
+
 
     </div>
   );

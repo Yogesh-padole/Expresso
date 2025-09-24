@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
 import {
@@ -15,12 +15,28 @@ import {
 
 import Header from "../views/header";
 
+// ✅ Predefined Tags
+const availableTags = [
+  "collegevibes",
+  "friendshipgoals",
+  "firstlove",
+  "familyfirst",
+  "memezone",
+  "dreambig",
+  "travelgram",
+  "musiclife",
+  "animeandchill",
+  "foodielife",
+  "mentalpeace",
+  "lovestory",
+];
+
 export default function MyPosts() {
   const [posts, setPosts] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState([]);
   const [hideIdentity, setHideIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -58,7 +74,7 @@ export default function MyPosts() {
       await addDoc(collection(db, "posts"), {
         title,
         content,
-        tags: tags.split(",").map((t) => t.trim()),
+        tags,
         author: hideIdentity ? "Anonymous" : user.displayName || user.email,
         authorId: user.uid,
         createdAt: serverTimestamp(),
@@ -67,7 +83,7 @@ export default function MyPosts() {
       // Reset form
       setTitle("");
       setContent("");
-      setTags("");
+      setTags([]);
       setHideIdentity(false);
       setShowPostForm(false);
     } catch (error) {
@@ -82,6 +98,15 @@ export default function MyPosts() {
       await deleteDoc(doc(db, "posts", postId));
     } catch (error) {
       console.error("Error deleting post: ", error);
+    }
+  };
+
+  // ✅ Toggle tag selection
+  const toggleTag = (tag) => {
+    if (tags.includes(tag)) {
+      setTags(tags.filter((t) => t !== tag));
+    } else {
+      setTags([...tags, tag]);
     }
   };
 
@@ -112,19 +137,33 @@ export default function MyPosts() {
                 type="text"
                 placeholder="Title / Caption"
                 value={title}
+                required
                 onChange={(e) => setTitle(e.target.value)}
               />
               <textarea
                 placeholder="Write your story..."
                 value={content}
+                required
                 onChange={(e) => setContent(e.target.value)}
               />
-              <input
-                type="text"
-                placeholder="Tags (comma separated)"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-              />
+
+              {/* Tag Selector */}
+              <div className="tag-selector">
+                <p>Select Tags:</p>
+                <div className="tags-grid">
+                  {availableTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      className={`tag-btn ${tags.includes(tag) ? "selected" : ""}`}
+                      onClick={() => toggleTag(tag)}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <label className="anon-toggle">
                 <input
                   type="checkbox"
@@ -344,6 +383,25 @@ export default function MyPosts() {
           color: #d4e3f7;
           line-height: 1.5;
         }
+        .tags-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 1rem;
+        }
+        .tag-btn {
+          padding: 5px 10px;
+          border-radius: 20px;
+          border: 1px solid #4c8dd4;
+          background: transparent;
+          color: #a8c9ff;
+          cursor: pointer;
+          font-size: 0.9rem;
+        }
+        .tag-btn.selected {
+          background: #4c8dd4;
+          color: white;
+        }
         .tags {
           color: #9ec8ff;
         }
@@ -374,6 +432,48 @@ export default function MyPosts() {
           box-shadow: 0px 8px 25px rgba(76, 141, 212, 0.8),
                       0px 0px 20px rgba(76, 141, 212, 0.6) inset;
         }
+                      .anon-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  color: #bcd2f5;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.anon-toggle input[type="checkbox"] {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background: #3b6fa5;
+  border-radius: 20px;
+  position: relative;
+  outline: none;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.anon-toggle input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  background: white;
+  transition: transform 0.3s ease;
+}
+
+.anon-toggle input[type="checkbox"]:checked {
+  background: #4c8dd4;
+}
+
+.anon-toggle input[type="checkbox"]:checked::before {
+  transform: translateX(20px);
+}
+
       `}</style>
     </>
   );

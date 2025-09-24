@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Header from "../views/header";
 import { db, auth } from "../firebase";
 import {
   doc,
@@ -57,6 +58,8 @@ export default function Saved() {
   };
 
   return (
+    <>
+    <Header />
     <div className="saved-container">
       <h2>Saved Posts</h2>
 
@@ -169,5 +172,6 @@ export default function Saved() {
         }
       `}</style>
     </div>
+    </>
   );
 }

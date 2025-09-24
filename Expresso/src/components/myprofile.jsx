@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Header from "../views/header";
 import { auth, db } from "../firebase";
 import {
   doc,
@@ -127,6 +128,8 @@ useEffect(() => {
   };
 
   return (
+    <>
+    <Header />
     <div className="my-profile-container">
       <h2 className="title">✨ My Profile ✨</h2>
 
@@ -457,5 +460,6 @@ useEffect(() => {
         }
       `}</style>
     </div>
+    </>
   );
 }
