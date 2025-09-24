@@ -1,12 +1,11 @@
 import { useState } from "react";
 import {
   collection,
-  addDoc,
-  doc,
   setDoc,
   query,
   where,
   getDocs,
+  doc,
 } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
@@ -15,6 +14,7 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 export default function Register() {
   const [form, setForm] = useState({ userId: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // show/hide password
   const auth = getAuth();
   const Navigate = useNavigate();
 
@@ -87,7 +87,6 @@ export default function Register() {
               required
             />
           </div>
-          <br />
 
           <div className="field-group">
             <label htmlFor="Email">Email address:</label>
@@ -100,23 +99,30 @@ export default function Register() {
               required
             />
           </div>
-          <br />
 
           <div className="field-group">
             <label htmlFor="Password1">Password:</label>
-            <input
-              type="password"
-              id="Password1"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"} // toggle
+                id="Password1"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                className="toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
-          <br />
 
-          <button type="submit" className="btn" disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
@@ -132,19 +138,18 @@ export default function Register() {
             max-width: 500px;
             margin: 40px auto;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            height: 100%;
-            width: 100%;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             background-color: rgba(33, 31, 31, 0.5);
             padding: 20px;
             color: white;
+            width: 90%;
           }
 
           .field-group {
             display: flex;
             flex-direction: column;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
           }
 
           label {
@@ -159,16 +164,32 @@ export default function Register() {
             font-size: 1em;
             font-weight: 400;
             font-family: inherit;
-            width: 400px;
-            margin-left: 20px;
+            width: 100%;
             background-color: transparent;
+            box-sizing: border-box;
+            color: aliceblue;
           }
 
           input::placeholder {
             color: rgba(255, 255, 255, 0.5);
           }
 
-         
+          .password-wrapper {
+            position: relative;
+          }
+
+          .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9599e7;
+            cursor: pointer;
+            font-size: 14px;
+          }
+
 
           button:disabled {
             background-color: #6c757d;
@@ -179,6 +200,17 @@ export default function Register() {
             margin-top: 1rem;
             color: white;
             text-align: center;
+          }
+
+          @media (max-width: 480px) {
+            .custom-container {
+              padding: 15px;
+            }
+
+            .toggle-btn {
+              font-size: 12px;
+              right: 8px;
+            }
           }
         `}
       </style>

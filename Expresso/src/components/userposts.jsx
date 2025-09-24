@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -7,33 +7,81 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  where,
+  getDoc,
+  doc,
 } from "firebase/firestore";
-
 import Reaction from "../components/reaction";
+import { Link } from "react-router-dom";
+
+// ✅ Predefined Tags
+const availableTags = [
+  "collegevibes",
+  "friendshipgoals",
+  "firstlove",
+  "familyfirst",
+  "memezone",
+  "dreambig",
+  "travelgram",
+  "musiclife",
+  "animeandchill",
+  "foodielife",
+  "mentalpeace",
+  "lovestory",
+];
 
 export default function UserPosts() {
   const [posts, setPosts] = useState([]);
   const [showPostForm, setShowPostForm] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [tags, setTags] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]);
   const [hideIdentity, setHideIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null); // postId
+  const [userReports, setUserReports] = useState([]); // postIds reported by user
 
-  // Fetch posts in real-time
+  const menuRef = useRef(null);
+  const user = auth.currentUser;
+
+  // 🔹 Close menu when clicking outside
   useEffect(() => {
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPosts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
-    return () => unsubscribe();
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Add post
+  // 🔹 Fetch posts
+  useEffect(() => {
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snap) => {
+      setPosts(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  // 🔹 Fetch user's reports
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, "reports"),
+      where("reportedBy", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const reportedPostIds = snap.docs.map((doc) => doc.data().postId);
+      setUserReports(reportedPostIds);
+    });
+    return () => unsub();
+  }, [user]);
+
+  // 🔹 Add new post
   const handleAddPost = async () => {
     if (!content.trim() || !title.trim()) return;
-
-    const user = auth.currentUser;
     if (!user) {
       alert("You must be logged in to post");
       return;
@@ -44,25 +92,66 @@ export default function UserPosts() {
       await addDoc(collection(db, "posts"), {
         title,
         content,
-        tags: tags.split(",").map((t) => t.trim()),
+        tags: selectedTags,
         author: hideIdentity ? "Anonymous" : user.displayName || user.email,
         authorId: user.uid,
         createdAt: serverTimestamp(),
       });
       setTitle("");
       setContent("");
-      setTags("");
+      setSelectedTags([]);
       setHideIdentity(false);
       setShowPostForm(false);
-    } catch (error) {
-      console.error("Error adding post: ", error);
+    } catch (err) {
+      console.error("Error adding post:", err);
     }
     setLoading(false);
   };
 
+  // 🔹 Toggle tag selection
+  const toggleTag = (tag) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  // 🔹 Report post
+  const handleReportPost = async (postId) => {
+    if (!user) {
+      alert("You must be logged in to report");
+      return;
+    }
+    if (userReports.includes(postId)) return;
+
+    try {
+      await addDoc(collection(db, "reports"), {
+        postId,
+        reportedBy: user.uid,
+        reason: "Inappropriate content",
+        createdAt: serverTimestamp(),
+      });
+      alert("Post reported successfully ✅");
+      setOpenMenu(null);
+    } catch (err) {
+      console.error("Error reporting post:", err);
+    }
+  };
+
+  const [expandedPosts, setExpandedPosts] = useState([]);
+
+const toggleExpand = (postId) => {
+  setExpandedPosts((prev) =>
+    prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
+  );
+};
+
+
   return (
     <div className="user-posts-container">
-      <h2>User Posts</h2>
+      <h2>Public Posts</h2>
+      <p>Read stories from the community or share your own.</p>
 
       {/* Floating Button */}
       <button className="floating-btn" onClick={() => setShowPostForm(true)}>
@@ -81,19 +170,31 @@ export default function UserPosts() {
               type="text"
               placeholder="Title / Caption"
               value={title}
+              required
               onChange={(e) => setTitle(e.target.value)}
             />
             <textarea
               placeholder="Write your story..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              required
             />
-            <input
-              type="text"
-              placeholder="Tags (comma separated)"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-            />
+            <div className="tag-selector">
+              <p>Select Tags:</p>
+              <div className="tags-grid">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`tag-btn ${selectedTags.includes(tag) ? "selected" : ""}`}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <label className="anon-toggle">
               <input
                 type="checkbox"
@@ -102,11 +203,7 @@ export default function UserPosts() {
               />
               Post anonymously
             </label>
-            <button
-              className="post-btn"
-              onClick={handleAddPost}
-              disabled={loading}
-            >
+            <button className="post-btn" onClick={handleAddPost} disabled={loading}>
               {loading ? "Posting..." : "Post"}
             </button>
           </div>
@@ -115,150 +212,433 @@ export default function UserPosts() {
 
       {/* Posts List */}
       <div className="posts-list">
-        {posts.map((post) => (
-          <div className="post" key={post.id}>
-            <h4>{post.title}</h4>
-            <p>{post.content}</p>
-            {post.tags && (
-              <small style={{ color: "#9ec8ff" }}>
-                Tags: {post.tags.join(", ")}
-              </small>
-            )}
-            <br />
-            <small style={{ color: "#8faed1" }}>
-              — {post.author || "Anonymous"}
-            </small>
-            {/* ✅ FIX: Pass post.id here */}
-            <Reaction postId={post.id} />
-          </div>
-        ))}
+        {posts.length === 0 ? (
+          <p>No posts yet. Be the first to share something!</p>
+        ) : (
+          posts.map((post) => (
+            <div className="post" key={post.id}>
+              <div className="post-header">
+                <h4>{post.title}</h4>
+                {/* Three dots menu */}
+                <div className="menu-wrapper" ref={menuRef}>
+                  <button
+                    className="menu-btn"
+                    onClick={() => setOpenMenu(openMenu === post.id ? null : post.id)}
+                  >
+                    ⋮
+                  </button>
+                  {openMenu === post.id && (
+                    <div className="menu-dropdown">
+                      <button
+                        onClick={() => handleReportPost(post.id)}
+                        disabled={userReports.includes(post.id)}
+                      >
+                        {userReports.includes(post.id) ? "Reported" : "Report"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <p
+  className={`post-content ${expandedPosts.includes(post.id) ? "expanded" : ""}`}
+  onClick={() => toggleExpand(post.id)}
+>
+  {post.content}
+</p>
+
+
+              {post.tags && post.tags.length > 0 && (
+                <small className="post-tags">
+                  Tags:{" "}
+                  {post.tags.map((tag) => (
+                    <Link key={tag} to={`/tags/${tag}`} className="tag-link">
+                      #{tag}
+                    </Link>
+                  ))}
+                </small>
+              )}
+              <br />
+              <small className="post-author">— {post.author || "Anonymous"}</small>
+
+              {/* Like/Reaction */}
+              <Reaction postId={post.id} />
+            </div>
+          ))
+        )}
       </div>
 
-      <style>{`
-        .user-posts-container {
-          max-width: 700px;
-          margin: auto;
-          padding: 1rem;
-          position: relative;
-          color: #dce7f3;
-        }
-        h2, h3 {
-          color: #a8c9ff;
-        }
-        .floating-btn {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
-          color: white;
-          border: none;
-          border-radius: 50%;
-          font-size: 2rem;
-          font-weight: bold;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0px 6px 20px rgba(76, 141, 212, 0.6),
-                      0px 0px 15px rgba(76, 141, 212, 0.4) inset;
-          transition: all 0.25s ease-in-out;
-          overflow: hidden;
-        }
-        .floating-btn:hover {
-          transform: scale(1.15) rotate(8deg);
-          box-shadow: 0px 8px 25px rgba(76, 141, 212, 0.8),
-                      0px 0px 20px rgba(76, 141, 212, 0.6) inset;
-        }
-        .floating-btn:active {
-          transform: scale(0.95);
-          box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
-        }
-        .overlay {
-          position: fixed;
-          top: 0; left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(10, 20, 40, 0.6);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          backdrop-filter: blur(4px);
-        }
-        .post-modal {
-          background: rgba(25, 40, 70, 0.9);
-          padding: 1.5rem;
-          border-radius: 12px;
-          width: 90%;
-          max-width: 500px;
-          position: relative;
-          box-shadow: 0px 8px 20px rgba(0,0,0,0.4);
-          border: 1px solid rgba(255,255,255,0.1);
-        }
-        .close-btn {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          border: none;
-          background: transparent;
-          font-size: 1.5rem;
-          cursor: pointer;
-          color: #fff;
-        }
-        input, textarea {
-          width: 100%;
-          margin-bottom: 0.8rem;
-          padding: 0.6rem;
-          border-radius: 8px;
-          border: 1px solid rgba(255,255,255,0.2);
-          font-size: 1rem;
-          background: rgba(255,255,255,0.05);
-          color: #e5f0ff;
-        }
-        input::placeholder, textarea::placeholder {
-          color: #a6b9d6;
-        }
-        textarea {
-          height: 80px;
-        }
-        .anon-toggle {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-          color: #bcd2f5;
-          margin-right: 10px;
-          width: fit-content;
-        }
-        .post-btn {
-          padding: 0.6rem 1.2rem;
-          border: none;
-          background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
-          color: white;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: bold;
-          box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-        }
-        .posts-list .post {
-          background: rgba(20, 35, 60, 0.7);
-          border: 1px solid rgba(255,255,255,0.1);
-          padding: 0.8rem;
-          margin-bottom: 0.5rem;
-          border-radius: 8px;
-          box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
-        }
-        .posts-list .post h4 {
-          margin-bottom: 0.3rem;
-          color: #a8c9ff;
-        }
-        .posts-list .post p {
-          margin-bottom: 0.3rem;
-          color: #d4e3f7;
-        }
-      `}</style>
+      {/* Styles */}
+      
+
+<style>{`
+  .user-posts-container {
+    max-width: 700px;
+    margin: auto;
+    padding: 1rem;
+    color: #dce7f3;
+  }
+
+  h2 {
+    color: #a8c9ff;
+    margin-bottom: 0.2rem;
+    margin-top:-20px;
+    font-size: 1.8rem;
+  }
+
+  p {
+    margin-bottom: 1.2rem;
+    color: #bcd2f5;
+    font-size: 1rem;
+  }
+    /* Default post text */
+.post-content {
+  color: #d4e3f7;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Mobile truncated view */
+@media (max-width: 600px) {
+  .post-content {
+    display: -webkit-box;
+    -webkit-line-clamp: 8;   /* show only 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .post-content::after {
+    content: " ... Read more";
+    color: #9ec8ff;
+    font-size: 0.85rem;
+  }
+
+  .post-content.expanded {
+    display: block; /* show full text */
+  }
+
+  .post-content.expanded::after {
+    content: "";
+  }
+}
+
+
+  .floating-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #4c8dd4, #3b6fa5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0px 6px 20px rgba(76,141,212,0.6),
+                0px 0px 15px rgba(76,141,212,0.4) inset;
+    transition: all 0.25s ease-in-out;
+    z-index: 100;
+  }
+
+  .floating-btn:hover {
+    transform: scale(1.15) rotate(8deg);
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+
+  .post-modal {
+    background: rgba(25,40,70,0.95);
+    padding: 1.5rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.4);
+    color: #dce7f3;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #fff;
+  }
+
+  input, textarea {
+    width: 100%;
+    margin-bottom: 0.8rem;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: #e5f0ff;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    height: 80px;
+    resize: vertical;
+  }
+
+  .post-btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .tag-selector p {
+    color: #bcd2f5;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1rem;
+  }
+
+  .tag-btn {
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid #4c8dd4;
+    background: transparent;
+    color: #a8c9ff;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .tag-btn.selected {
+    background: #4c8dd4;
+    color: white;
+  }
+
+  .anon-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+    color: #bcd2f5;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .anon-toggle input[type="checkbox"] {
+    appearance: none;
+    width: 36px;
+    height: 18px;
+    background: #3b6fa5;
+    border-radius: 20px;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .anon-toggle input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    background: white;
+    transition: transform 0.3s ease;
+  }
+
+  .anon-toggle input[type="checkbox"]:checked::before {
+    transform: translateX(18px);
+  }
+
+  .posts-list .post {
+    background: rgba(20,35,60,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    border-radius: 10px;
+    position: relative;
+    word-break: break-word;
+  }
+
+  .posts-list .post h4 {
+    margin-bottom: 0.3rem;
+    color: #a8c9ff;
+    font-size: 1.1rem;
+  }
+
+  .posts-list .post p {
+    margin-bottom: 0.3rem;
+    color: #d4e3f7;
+    font-size: 0.95rem;
+  }
+
+  .post-tags {
+    color: #9ec8ff;
+    font-size: 0.85rem;
+  }
+
+  .tag-link {
+    color: #9ec8ff;
+    margin-right: 6px;
+    text-decoration: none;
+  }
+
+  .tag-link:hover {
+    text-decoration: underline;
+  }
+
+  .post-author {
+    color: #8faed1;
+    font-size: 0.8rem;
+  }
+
+  .menu-wrapper {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-block;
+  }
+
+  .menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #bcd2f5;
+  }
+
+.menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 25px;
+  background: #2b3e5c;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  z-index: 10;
+  
+  display: flex;        
+  flex-direction: row;   
+  gap: 8px;              
+  align-items: center;
+}
+
+.menu-dropdown button {
+  display: inline-block;  
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: none;
+  text-align: center;
+  color: #dce7f3;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;    
+}
+
+.menu-dropdown button:hover:not(:disabled) {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+}
+
+
+  /* Mobile responsiveness improvements */
+@media (max-width: 600px) {
+  .user-posts-container {
+    padding: 0.5rem;
+  }
+
+  .post-modal {
+    padding: 1rem;
+    max-width: 95%;
+  }
+
+  .post-btn {
+    font-size: 0.95rem;
+  }
+
+  .tag-btn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .posts-list .post h4 {
+    font-size: 1rem;
+  }
+
+  .posts-list .post p {
+    font-size: 0.9rem;
+  }
+
+  .post-tags {
+    font-size: 0.75rem;
+  }
+
+  .post-author {
+    font-size: 0.7rem;
+  }
+
+  /* Mobile menu improvements */
+  .menu-dropdown {
+    right: 0;
+    top: 30px;
+    min-width: 120px; /* bigger click area */
+    padding: 0.5rem 0;
+    border-radius: 8px;
+  }
+
+  .menu-dropdown button {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem; /* more tappable */
+    width: 100%;
+    text-align: left;
+  }
+
+  .menu-btn {
+    font-size: 1.4rem; /* slightly bigger on mobile */
+    padding: 4px;
+  }
+
+  .menu-dropdown button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+`}</style>
+
+
     </div>
   );
 }

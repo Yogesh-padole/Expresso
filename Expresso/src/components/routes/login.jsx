@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // New state
   const Navigate = useNavigate();
 
   const auth = getAuth();
@@ -79,14 +80,23 @@ export default function Login() {
 
           <div className="mb-3">
             <label htmlFor="Password1" className="form-label">Password:</label>
-            <input
-              type="password"
-              id="Password1"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="form-control"
-            />
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"} // Toggle type
+                id="Password1"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="form-control"
+              />
+              <button
+                type="button"
+                className="toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
           <br />
 
@@ -109,57 +119,68 @@ export default function Login() {
       <p className="mt-3">Do not have an account? <Link to="/register">Register here</Link>.</p>
 
       <style>
-  {`
-    .container {
-      max-width: 500px;
-      margin: auto;
-      margin-top: 80px;
-      padding: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      height: 100%;
-      width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-      background-color: rgba(33, 31, 31, 0.5);
-      padding: 20px;
-      color: white;
-    }
-    .form-label {
-      font-weight: bold;
-    }
-    .form-control {
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      padding: 0.6em 1.2em;
-      margin-right: 10px;
-      font-size: 1em;
-      font-weight: 400;
-      font-family: inherit;
-      width: 400px;
-      background-color: transparent;
-    }
-    .form-control::placeholder {
-      color: rgba(255, 255, 255, 0.5);
-    }
-   
-    .btn-link {
-      background: none;
-      border: none;
-      color:  #9599e7;
-      text-decoration: underline;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-    }
-    .mt-3 {
-      margin-top: 1rem;
-      color: white;
-      text-align: center;
-    }
-      
-  `}
-</style>
-
+        {`
+          .container {
+            max-width: 500px;
+            margin: auto;
+            margin-top: 80px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            height: 100%;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            background-color: rgba(33, 31, 31, 0.5);
+            padding: 20px;
+            color: white;
+          }
+          .form-label {
+            font-weight: bold;
+          }
+          .form-control {
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            padding: 0.6em 1.2em;
+            margin-right: 10px;
+            font-size: 1em;
+            font-weight: 400;
+            font-family: inherit;
+            width: 100%;
+            background-color: transparent;
+          }
+          .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+          }
+          .password-wrapper {
+            position: relative;
+          }
+          .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9599e7;
+            cursor: pointer;
+            font-size: 14px;
+          }
+          .btn-link {
+            background: none;
+            border: none;
+            color: #9599e7;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+          }
+          .mt-3 {
+            margin-top: 1rem;
+            color: white;
+            text-align: center;
+          }
+        `}
+      </style>
     </div>
   );
 }
