@@ -203,7 +203,8 @@ useEffect(() => {
       )}
 
       {/* Reports Section */}
-      {activeTab === "reports" && (
+     {/* Reports Section */}
+{activeTab === "reports" && (
   <div className="reports-section card">
     <h3>📑 My Reports</h3>
     {reports.length === 0 ? (
@@ -231,6 +232,24 @@ useEffect(() => {
                 Reported At:{" "}
                 {r.createdAt?.toDate().toLocaleString() || "Just now"}
               </small>
+
+              {/* 🔹 Extra Fields */}
+              <p>
+                <b>Status:</b> {r.status || "pending"}
+              </p>
+              <p>
+                <b>Resolved:</b> {r.resolved ? "✅ Yes" : "❌ No"}
+              </p>
+              {r.resolutionNote && (
+                <p>
+                  <b>Resolution Note:</b> {r.resolutionNote}
+                </p>
+              )}
+              {r.resolvedAt && (
+                <small>
+                  Resolved At: {r.resolvedAt.toDate().toLocaleString()}
+                </small>
+              )}
             </>
           ) : (
             <p>This post has been deleted.</p>

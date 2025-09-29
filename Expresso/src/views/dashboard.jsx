@@ -9,10 +9,8 @@ export default function Dashboard() {
       <Header />
       <div className="dashboard-container">
         <div className="dashboard-content">
-          <h1 className="dashboard-title">Dashboard</h1>
-          <p className="dashboard-subtitle">
-            Welcome to dashboard! Here you can see all Stories and Posts, Also  add yours, and more.
-          </p>
+          
+          
 
           <UserPosts />
           

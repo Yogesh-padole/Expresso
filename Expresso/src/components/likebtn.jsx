@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { doc, runTransaction, onSnapshot, increment, arrayUnion, arrayRemove } from "firebase/firestore";
+import {
+  doc,
+  runTransaction,
+  onSnapshot,
+  increment,
+  arrayUnion,
+  arrayRemove,
+  getDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { FaThumbsUp, FaRegThumbsUp } from "react-icons/fa";
 
@@ -9,7 +20,9 @@ export default function LikeButton({ postId }) {
   const user = auth.currentUser;
 
   useEffect(() => {
+    if (!postId) return;
     const postRef = doc(db, "posts", postId);
+
     const unsub = onSnapshot(postRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
@@ -17,16 +30,25 @@ export default function LikeButton({ postId }) {
         setLiked(data.likedBy?.includes(user?.uid) || false);
       }
     });
+
     return () => unsub();
   }, [postId, user?.uid]);
 
   const handleLike = async () => {
     if (!user) return alert("Login first to like");
+
     const postRef = doc(db, "posts", postId);
+    let postData;
+
+    // 🔹 Transaction only for updating likes
     await runTransaction(db, async (transaction) => {
       const postDoc = await transaction.get(postRef);
       if (!postDoc.exists()) throw "Post not found";
-      if (liked) {
+
+      postData = postDoc.data();
+      const alreadyLiked = postData.likedBy?.includes(user.uid);
+
+      if (alreadyLiked) {
         transaction.update(postRef, {
           likes: increment(-1),
           likedBy: arrayRemove(user.uid),
@@ -38,6 +60,33 @@ export default function LikeButton({ postId }) {
         });
       }
     });
+
+    // 🔹 Separate notification write (outside transaction)
+    if (postData && user.uid !== postData.authorId && !liked) {
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        let username = "Anonymous";
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          username =
+            data.username || data.displayName || user.email || "Anonymous";
+        }
+
+        await addDoc(collection(db, "notifications"), {
+          userId: postData.authorId,
+          senderId: user.uid,
+          postId,
+          type: "like",
+          message: `${username} liked your post.`,
+          createdAt: serverTimestamp(),
+          seen: false,
+        });
+      } catch (err) {
+        console.error("Notification error:", err);
+      }
+    }
   };
 
   return (

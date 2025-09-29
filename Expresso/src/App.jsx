@@ -8,6 +8,7 @@ import Posts from './components/myposts';
 import Myprofile from './components/myprofile';
 import Saved from './components/saved';
 import TagPosts from './components/tagposts';
+import Feedback from './components/feedback'; // ✅ Import Feedback component
 
 
 
@@ -28,6 +29,7 @@ function App() {
         <Route path="/myprofile" element={<Myprofile />} />
         <Route path="/saved" element={<Saved />} />
         <Route path="/tags/:tag" element={<TagPosts />} /> 
+        <Route path="/feedback" element={<Feedback />} /> 
       </Routes>
     </Router>
   );

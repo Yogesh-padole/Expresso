@@ -1,18 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, onSnapshot, orderBy, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 export default function Header() {
   const [username, setUsername] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const auth = getAuth();
   const dropdownRef = useRef();
   const tagsRef = useRef();
+  const notifRef = useRef();
   const navigate = useNavigate();
 
+  // Get current user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -20,7 +24,7 @@ export default function Header() {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            setUsername(userData.userId || user.email);
+            setUsername(userData.name || user.email);
           } else {
             setUsername(user.email);
           }
@@ -31,22 +35,22 @@ export default function Header() {
         setUsername("");
       }
     });
-
     return () => unsubscribe();
   }, []);
 
+  // Fetch notifications
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-      if (tagsRef.current && !tagsRef.current.contains(event.target)) {
-        setTagsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (!auth.currentUser) return;
+    const notifQuery = query(
+      collection(db, "notifications"),
+      where("userId", "==", auth.currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
+    const unsub = onSnapshot(notifQuery, (snap) => {
+      setNotifications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, [auth.currentUser]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -54,50 +58,49 @@ export default function Header() {
     navigate("/login");
   };
 
+  // Count of unread notifications
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleNotifClick = async () => {
+    setNotifOpen(!notifOpen);
+
+    // Mark all notifications as read when opening
+    if (!notifOpen) {
+      notifications.forEach(async (notif) => {
+        if (!notif.read) {
+          await updateDoc(doc(db, "notifications", notif.id), { read: true });
+        }
+      });
+    }
+  };
+
   return (
     <>
       <nav className="navbar">
         <div className="nav-flex">
-          {/* Left group */}
           <div className="left-group" ref={dropdownRef}>
-            {/* Hamburger menu */}
             <div className="dropend">
-              <button
-                className="dropend-toggle"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                ☰
-              </button>
+              <button className="dropend-toggle" onClick={() => setDropdownOpen(!dropdownOpen)}>☰</button>
               {dropdownOpen && (
                 <ul className="dropdown-menu">
                   <li><Link to="/myposts">Myposts</Link></li>
                   <li><Link to="/saved">Saved Posts</Link></li>
                   <li><Link to="/myprofile">My Profile</Link></li>
-                  {/* Logout visible only on mobile */}
+                  <li><Link to="/feedback">Feedback</Link></li>
                   {username && (
                     <li className="mobile-logout-item">
-                      <button className="btn logout-btn" onClick={handleLogout}>
-                        Logout
-                      </button>
+                      <button className="btn logout-btn" onClick={handleLogout}>Logout</button>
                     </li>
                   )}
                 </ul>
               )}
             </div>
 
-            {/* Brand */}
-            <Link className="navbar-brand" to="/">
-              Expresso
-            </Link>
+            <Link className="navbar-brand" to="/">Expresso</Link>
 
             {/* Tags Dropdown */}
             <div className="dropend" ref={tagsRef}>
-              <button
-                className="dropend-toggle"
-                onClick={() => setTagsOpen(!tagsOpen)}
-              >
-                Explore Tags ▼
-              </button>
+              <button className="dropend-toggle" onClick={() => setTagsOpen(!tagsOpen)}>Explore Tags ▼</button>
               {tagsOpen && (
                 <ul className="dropdown-menu">
                   <li><Link to="/tags/collegevibes">#collegevibes</Link></li>
@@ -115,20 +118,35 @@ export default function Header() {
                 </ul>
               )}
             </div>
+
+            {/* Notification Bell */}
+            {username && (
+              <div className="dropend" ref={notifRef}>
+                <button className="dropend-toggle notif-btn" onClick={handleNotifClick}>
+                  🔔 {unreadCount > 0 && <span className="notif-count">{unreadCount}</span>}
+                </button>
+                {notifOpen && (
+                  <ul className="dropdown-menu notif-dropdown">
+                    {notifications.length === 0 ? (
+                      <li>No new notifications</li>
+                    ) : (
+                      notifications.map((notif) => (
+                        <li key={notif.id}>{notif.message}</li>
+                      ))
+                    )}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Right side */}
           <div className="auth-buttons">
             {username ? (
               <>
                 <span className="username">
                   Hi, <strong><Link to="/myprofile" className="username-link">{username}</Link></strong>
                 </span>
-
-                {/* Desktop logout button */}
-                <button className="btn logout-btn desktop-logout" onClick={handleLogout}>
-                  Logout
-                </button>
+                <button className="btn logout-btn desktop-logout" onClick={handleLogout}>Logout</button>
               </>
             ) : (
               <>
@@ -139,6 +157,7 @@ export default function Header() {
           </div>
         </div>
       </nav>
+    
 
       <style>{`
         .navbar {
@@ -154,48 +173,42 @@ export default function Header() {
           backdrop-filter: blur(6px);
         }
 
-        .nav-flex {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
+        .notif-btn {
+          position: relative;
+          font-size: 1.2rem;
         }
-
-        .left-group {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-
-        .navbar-brand {
-          font-size: 1.5rem;
-          font-weight: bold;
-          text-decoration: none;
+        .notif-count {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          background: red;
           color: white;
+          font-size: 0.7rem;
+          padding: 2px 5px;
+          border-radius: 50%;
         }
 
-        .auth-buttons {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
+        /* Notification dropdown flexible width */
+        .notif-dropdown {
+          width: max-content;
+          max-width: 300px;
+          white-space: normal;
         }
 
-        .username {
-          margin-right: 10px;
-          font-size: 0.95rem;
-        }
+        .dropdown-menu li { word-break: break-word; }
 
-        .username-link {
-          color: white;
-          text-decoration: none;
-        }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 
-        .username-link:hover {
-          text-decoration: underline;
-        }
+        .left-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .navbar-brand { font-size: 1.5rem; font-weight: bold; text-decoration: none; color: white; }
+
+        .auth-buttons { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .username { margin-right: 10px; font-size: 0.95rem; }
+
+        .username-link { color: white; text-decoration: none; }
+        .username-link:hover { text-decoration: underline; }
 
         .btn {
           padding: 8px 14px;
@@ -212,7 +225,7 @@ export default function Header() {
         .login-btn:hover { background-color: #3498db; }
         .register-btn { background-color: #2c3e50; color: white; }
         .register-btn:hover { background-color: #34495e; }
-        .logout-btn { background-color: #c0392b; color: white;display: block; }
+        .logout-btn { background-color: #c0392b; color: white; display: block; }
         .logout-btn:hover { background-color: #e74c3c; }
 
         .dropend { position: relative; }
@@ -257,7 +270,7 @@ export default function Header() {
           .navbar { padding: 10px 15px; }
           .navbar-brand { font-size: 1.8rem; }
           .btn { padding: 6px 10px; font-size: 0.8rem; }
-          .dropend-toggle { font-size: 5rem; }
+          .dropend-toggle { font-size: 1.5rem; }
           .dropdown-menu { min-width: 120px; padding: 6px; }
           .dropdown-menu a, .dropdown-menu button { font-size: 0.85rem; }
           .nav-flex { flex-direction: column; align-items: flex-start; gap: 8px; }
