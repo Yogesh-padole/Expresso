@@ -8,7 +8,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Register() {

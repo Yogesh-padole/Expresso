@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -30,7 +34,10 @@ export default function Login() {
       setForm({ email: "", password: "" });
     } catch (err) {
       console.error("Login error:", err);
-      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+      if (
+        err.code === "auth/invalid-credential" ||
+        err.code === "auth/wrong-password"
+      ) {
         alert("Incorrect password. Please try again.");
       } else if (err.code === "auth/user-not-found") {
         alert("No account found with this email.");
@@ -66,7 +73,9 @@ export default function Login() {
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="Email" className="form-label">Email address:</label>
+            <label htmlFor="Email" className="form-label">
+              Email address:
+            </label>
             <input
               type="email"
               id="Email"
@@ -79,7 +88,9 @@ export default function Login() {
           <br />
 
           <div className="mb-3">
-            <label htmlFor="Password1" className="form-label">Password:</label>
+            <label htmlFor="Password1" className="form-label">
+              Password:
+            </label>
             <div className="password-wrapper">
               <input
                 type={showPassword ? "text" : "password"} // Toggle type
@@ -116,7 +127,9 @@ export default function Login() {
         </form>
       </div>
 
-      <p className="mt-3">Do not have an account? <Link to="/register">Register here</Link>.</p>
+      <p className="mt-3">
+        Do not have an account? <Link to="/register">Register here</Link>.
+      </p>
 
       <style>
         {`

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./views/home";
-import Register from "./routes/register";
-import Login from "./routes/login";
+import Register from "./components/routes/register";
+import Login from "./components/routes/login";
 import Dashboard from "./views/dashboard";
 import Posts from "./components/myposts";
 import Myprofile from "./components/myprofile";
