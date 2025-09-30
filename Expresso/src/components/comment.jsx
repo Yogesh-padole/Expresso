@@ -63,8 +63,7 @@ export default function CommentModal({ postId, onClose }) {
     let username = "Anonymous";
     if (userSnap.exists()) {
       const data = userSnap.data();
-      username =
-        data.username || data.displayName || user.email || "Anonymous";
+      username = data.username || data.displayName || user.email || "Anonymous";
     }
 
     const commentsRef = collection(db, "posts", postId, "comments");
@@ -113,8 +112,7 @@ export default function CommentModal({ postId, onClose }) {
     let username = "Anonymous";
     if (userSnap.exists()) {
       const data = userSnap.data();
-      username =
-        data.username || data.displayName || user.email || "Anonymous";
+      username = data.username || data.displayName || user.email || "Anonymous";
     }
 
     const repliesRef = collection(

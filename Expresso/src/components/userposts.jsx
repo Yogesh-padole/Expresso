@@ -46,7 +46,8 @@ export default function UserPosts() {
   const [hideIdentity, setHideIdentity] = useState(false);
   const [loading, setLoading] = useState(false);
   const [openMenu, setOpenMenu] = useState(null); // postId
-  const [showReportReasonsForPost, setShowReportReasonsForPost] = useState(null); // postId
+  const [showReportReasonsForPost, setShowReportReasonsForPost] =
+    useState(null); // postId
   const [userReports, setUserReports] = useState([]); // postIds reported by user
   const [error, setError] = useState(""); // validation errors
   const [expandedPosts, setExpandedPosts] = useState([]);
@@ -130,41 +131,41 @@ export default function UserPosts() {
   };
 
   // 🔹 Report post
- // 🔹 Report post
-const handleReportPost = async (postId, reason) => {
-  if (!user) {
-    alert("You must be logged in to report");
-    return;
-  }
-  if (userReports.includes(postId)) return;
+  // 🔹 Report post
+  const handleReportPost = async (postId, reason) => {
+    if (!user) {
+      alert("You must be logged in to report");
+      return;
+    }
+    if (userReports.includes(postId)) return;
 
-  // get post details
-  const post = posts.find((p) => p.id === postId);
-  if (!post) return;
+    // get post details
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
 
-  try {
-    await addDoc(collection(db, "reports"), {
-      postId,
-      reportedBy: user.uid,                // reporter UID
-      reportedByEmail: user.email || null, // reporter email
-      reason,
-      createdAt: serverTimestamp(),
+    try {
+      await addDoc(collection(db, "reports"), {
+        postId,
+        reportedBy: user.uid, // reporter UID
+        reportedByEmail: user.email || null, // reporter email
+        reason,
+        createdAt: serverTimestamp(),
 
-      // extra fields from post
-      postTitle: post.title || null,
-      postAuthor: post.author || "Anonymous",
-      postAuthorId: post.authorId || null, // optional if you want UID
-    });
+        // extra fields from post
+        postTitle: post.title || null,
+        postAuthor: post.author || "Anonymous",
+        postAuthorId: post.authorId || null, // optional if you want UID
+      });
 
-    setUserReports((prev) => [...prev, postId]);
-    setShowReportReasonsForPost(null);
-    setOpenMenu(null);
-    alert("Post reported successfully ✅");
-  } catch (err) {
-    console.error("Error reporting post:", err);
-    alert("Failed to report. Try again.");
-  }
-};
+      setUserReports((prev) => [...prev, postId]);
+      setShowReportReasonsForPost(null);
+      setOpenMenu(null);
+      alert("Post reported successfully ✅");
+    } catch (err) {
+      console.error("Error reporting post:", err);
+      alert("Failed to report. Try again.");
+    }
+  };
 
   const toggleExpand = (postId) => {
     setExpandedPosts((prev) =>
@@ -272,9 +273,7 @@ const handleReportPost = async (postId, reason) => {
                         reportReasons.map((reason) => (
                           <button
                             key={reason}
-                            onClick={() =>
-                              handleReportPost(post.id, reason)
-                            }
+                            onClick={() => handleReportPost(post.id, reason)}
                           >
                             {reason}
                           </button>
@@ -311,7 +310,9 @@ const handleReportPost = async (postId, reason) => {
                 </small>
               )}
               <br />
-              <small className="post-author">— {post.author || "Anonymous"}</small>
+              <small className="post-author">
+                — {post.author || "Anonymous"}
+              </small>
 
               {/* Like/Reaction */}
               <Reaction postId={post.id} />
@@ -322,6 +323,14 @@ const handleReportPost = async (postId, reason) => {
 
       {/* Styles */}
       <style>{`
+         body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          background-attachment: fixed; /* parallax-like */
+          color: white;
+        }
         .user-posts-container {
           max-width: 700px;
           margin: auto;

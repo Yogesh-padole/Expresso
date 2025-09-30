@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { collection, getDocs, query, where, doc, setDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Register() {
@@ -29,7 +36,10 @@ export default function Register() {
 
     try {
       // 1️⃣ Check if username already exists
-      const usernameQuery = query(collection(db, "users"), where("username", "==", username));
+      const usernameQuery = query(
+        collection(db, "users"),
+        where("username", "==", username)
+      );
       const usernameSnap = await getDocs(usernameQuery);
 
       if (!usernameSnap.empty) {
@@ -44,22 +54,19 @@ export default function Register() {
 
       // 3️⃣ Save user in Firestore
       await setDoc(doc(db, "users", uid), {
-        username:username,       
+        username: username,
         email: email,
         role: "User",
         createdAt: new Date(),
-        lastactive:"",
-        password:password,
-        status:"Active",
-        userId:uid
-        
-
+        lastactive: "",
+        password: password,
+        status: "Active",
+        userId: uid,
       });
 
       alert("Registered successfully!");
       setForm({ username: "", email: "", password: "" });
       navigate("/dashboard");
-
     } catch (err) {
       console.error("Registration error:", err);
       alert(err?.message || "Failed to register.");
@@ -108,7 +115,11 @@ export default function Register() {
               required
               minLength={6}
             />
-            <button type="button" className="toggle-btn" onClick={() => setShowPassword(!showPassword)}>
+            <button
+              type="button"
+              className="toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
@@ -124,6 +135,14 @@ export default function Register() {
       </p>
 
       <style>{`
+      body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          background-attachment: fixed; /* parallax-like */
+          color: white;
+        }
         .custom-container { max-width: 500px; margin: 40px auto; padding: 20px; background-color: rgba(33,31,31,0.5); color: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); width: 90%; }
         .field-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         label { font-weight: bold; margin-bottom: 5px; }

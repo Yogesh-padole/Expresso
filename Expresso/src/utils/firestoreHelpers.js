@@ -16,12 +16,53 @@ import {
   arrayRemove,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "../firebase/init";
+import { db } from "../firebase";
+// import { db } from "../firebase";
+export { db } from "../firebase";
+
+// ===== GET SIZE =====
+export const subscribeToSize = (colName, callback) => {
+  const colRef = collection(db, colName);
+
+  const unsubscribe = onSnapshot(colRef, (snapshot) => {
+    callback(snapshot.size);
+  });
+
+  return unsubscribe;
+};
+
+export const subscribeToPendingReportSize = (colName, callback) => {
+  const colRef = collection(db, colName);
+
+  // Query: resolved == false OR resolved does not exist
+  const q = query(colRef, where("resolved", "in", [false, null]));
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    callback(snapshot.size);
+  });
+
+  return unsubscribe;
+};
 
 // ===== USER OPERATIONS =====
 
 // Create or update user profile in Firestore
 // Called after successful authentication to store user data
+export const getLogUser = async (authId) => {
+  // Reference to the user document
+  const docRef = doc(db, "users", authId);
+
+  // Fetch the document
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    return docSnap.data(); // contains { email, role, ... }
+  } else {
+    console.log("No such user!");
+    return null;
+  }
+};
+
 export const createUserProfile = async (user) => {
   try {
     const userRef = doc(db, "users", user.uid);
@@ -30,11 +71,14 @@ export const createUserProfile = async (user) => {
     if (!userDoc.exists()) {
       // Create new user profile
       await updateDoc(userRef, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || user.email.split("@")[0],
-        postsCount: 0,
         createdAt: serverTimestamp(),
+        email: user.email,
+        lastactive: "",
+        name: user.name,
+        password: user.password,
+        role: user.role, // important for Cloud Function to detect admin
+        status: user.status,
+        userId: user.email,
       });
     }
     return userRef;
@@ -56,6 +100,20 @@ export const getAllUsers = async () => {
   }
 };
 
+export const subscribeToUsers = (callback) => {
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, orderBy("createdAt", "desc"));
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const usersData = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    callback(usersData);
+  });
+  return unsubscribe; // allows cleanup
+};
+
 //delete Users
 export const deleteUsers = async (userId) => {
   try {
@@ -65,6 +123,40 @@ export const deleteUsers = async (userId) => {
     console.error("Error deleting user:", error);
     throw error;
   }
+};
+
+//delete User & All related Data
+export const deleteUsersData = async (userId) => {
+  try {
+    const docRef = doc(db, "users", userId);
+    const userDocSnapshot = await getDoc(docRef);
+
+    if (!userDocSnapshot.exists()) {
+      throw new Error(`User document not found: ${userId}`);
+    }
+
+    const userData = userDocSnapshot.data();
+
+    if (Array.isArray(userData.savedPosts) && userData.savedPosts.length > 0) {
+      for (const postId of userData.savedPosts) {
+        await deletePost(postId);
+      }
+    }
+
+    await deleteDoc(docRef);
+  } catch (error) {
+    alert("Not Able To Delete User !!");
+    console.error("Error deleting user:", error);
+    throw error;
+  }
+};
+
+//update Users
+// In your firestoreHelpers.js
+export const updateUser = async (userId, userData) => {
+  console.log(`Inside updateUser userID : ${userId}`);
+  const userRef = doc(db, "users", userId);
+  await updateDoc(userRef, userData);
 };
 
 // ===== POST OPERATIONS =====
@@ -150,6 +242,16 @@ export const updatePost = async (postId, updates) => {
 export const deletePost = async (postId) => {
   try {
     const postRef = doc(db, "posts", postId);
+
+    // delete all comments inside this post
+    const commentsRef = collection(db, "posts", postId, "comments");
+    const commentsSnap = await getDocs(commentsRef);
+
+    for (const commentDoc of commentsSnap.docs) {
+      await deleteDoc(commentDoc.ref);
+    }
+
+    // finally delete the post itself
     await deleteDoc(postRef);
   } catch (error) {
     console.error("Error deleting post:", error);
@@ -370,17 +472,58 @@ export const resolveReport = async (reportId) => {
   }
 };
 
-// ===== FEEDBACK OPERATIONS =====
- try {
-      await addDoc(collection(db, "feedbacks"), {
-        username: formData.username,
-        email: formData.email,
-        suggestion: formData.suggestion,
-        stars: Number(formData.stars), // save as number in Firestore
-        date: serverTimestamp(),
+// Add this function to firestoreHelpers.js for reusability
+export const resolveReportsForPost = async (postId) => {
+  try {
+    const reportsRef = collection(db, "reports");
+    const q = query(reportsRef, where("postId", "==", postId));
+    const snapshot = await getDocs(q);
+
+    const updatePromises = snapshot.docs.map(async (reportDoc) => {
+      const reportRef = doc(db, "reports", reportDoc.id);
+      await updateDoc(reportRef, {
+        status: "completed",
+        resolved: true,
+        resolvedAt: serverTimestamp(),
+        resolutionNote: "Post was deleted",
       });
-      setSubmitted(true);
-      setFormData({ username: "", email: "", suggestion: "", stars: "0" });
-    } catch (err) {
-      console.error("Error submitting feedback:", err);
-    }
+    });
+
+    await Promise.all(updatePromises);
+    return snapshot.docs.length;
+  } catch (error) {
+    console.error("Error resolving reports for post:", error);
+    throw error;
+  }
+};
+
+// Delete a single report
+export const deleteReport = async (reportId) => {
+  try {
+    const reportRef = doc(db, "reports", reportId);
+    await deleteDoc(reportRef);
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    throw error;
+  }
+};
+
+// Delete all completed reports
+export const deleteAllCompletedReports = async () => {
+  try {
+    const reportsRef = collection(db, "reports");
+    const q = query(reportsRef, where("resolved", "==", true));
+    const snapshot = await getDocs(q);
+
+    const deletePromises = snapshot.docs.map(async (reportDoc) => {
+      const reportRef = doc(db, "reports", reportDoc.id);
+      await deleteDoc(reportRef);
+    });
+
+    await Promise.all(deletePromises);
+    return snapshot.docs.length;
+  } catch (error) {
+    console.error("Error deleting completed reports:", error);
+    throw error;
+  }
+};

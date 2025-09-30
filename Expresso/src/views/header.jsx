@@ -1,7 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, collection, query, where, onSnapshot, orderBy, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 
 export default function Header() {
@@ -47,7 +56,7 @@ export default function Header() {
       orderBy("createdAt", "desc")
     );
     const unsub = onSnapshot(notifQuery, (snap) => {
-      setNotifications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setNotifications(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsub();
   }, [auth.currentUser]);
@@ -59,7 +68,7 @@ export default function Header() {
   };
 
   // Count of unread notifications
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleNotifClick = async () => {
     setNotifOpen(!notifOpen);
@@ -80,41 +89,87 @@ export default function Header() {
         <div className="nav-flex">
           <div className="left-group" ref={dropdownRef}>
             <div className="dropend">
-              <button className="dropend-toggle" onClick={() => setDropdownOpen(!dropdownOpen)}>☰</button>
+              <button
+                className="dropend-toggle"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                ☰
+              </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu">
-                  <li><Link to="/myposts">Myposts</Link></li>
-                  <li><Link to="/saved">Saved Posts</Link></li>
-                  <li><Link to="/myprofile">My Profile</Link></li>
-                  <li><Link to="/feedback">Feedback</Link></li>
+                  <li>
+                    <Link to="/myposts">Myposts</Link>
+                  </li>
+                  <li>
+                    <Link to="/saved">Saved Posts</Link>
+                  </li>
+                  <li>
+                    <Link to="/myprofile">My Profile</Link>
+                  </li>
+                  <li>
+                    <Link to="/feedback">Feedback</Link>
+                  </li>
                   {username && (
                     <li className="mobile-logout-item">
-                      <button className="btn logout-btn" onClick={handleLogout}>Logout</button>
+                      <button className="btn logout-btn" onClick={handleLogout}>
+                        Logout
+                      </button>
                     </li>
                   )}
                 </ul>
               )}
             </div>
 
-            <Link className="navbar-brand" to="/">Expresso</Link>
+            <Link className="navbar-brand" to="/">
+              Expresso
+            </Link>
 
             {/* Tags Dropdown */}
             <div className="dropend" ref={tagsRef}>
-              <button className="dropend-toggle" onClick={() => setTagsOpen(!tagsOpen)}>Explore Tags ▼</button>
+              <button
+                className="dropend-toggle"
+                onClick={() => setTagsOpen(!tagsOpen)}
+              >
+                Explore Tags ▼
+              </button>
               {tagsOpen && (
                 <ul className="dropdown-menu">
-                  <li><Link to="/tags/collegevibes">#collegevibes</Link></li>
-                  <li><Link to="/tags/friendshipgoals">#friendshipgoals</Link></li>
-                  <li><Link to="/tags/firstlove">#firstlove</Link></li>
-                  <li><Link to="/tags/familyfirst">#familyfirst</Link></li>
-                  <li><Link to="/tags/memezone">#memezone</Link></li>
-                  <li><Link to="/tags/dreambig">#dreambig</Link></li>
-                  <li><Link to="/tags/travelgram">#travelgram</Link></li>
-                  <li><Link to="/tags/musiclife">#musiclife</Link></li>
-                  <li><Link to="/tags/animeandchill">#animeandchill</Link></li>
-                  <li><Link to="/tags/foodielife">#foodielife</Link></li>
-                  <li><Link to="/tags/mentalpeace">#mentalpeace</Link></li>
-                  <li><Link to="/tags/lovestory">#lovestory</Link></li>
+                  <li>
+                    <Link to="/tags/collegevibes">#collegevibes</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/friendshipgoals">#friendshipgoals</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/firstlove">#firstlove</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/familyfirst">#familyfirst</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/memezone">#memezone</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/dreambig">#dreambig</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/travelgram">#travelgram</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/musiclife">#musiclife</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/animeandchill">#animeandchill</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/foodielife">#foodielife</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/mentalpeace">#mentalpeace</Link>
+                  </li>
+                  <li>
+                    <Link to="/tags/lovestory">#lovestory</Link>
+                  </li>
                 </ul>
               )}
             </div>
@@ -122,8 +177,14 @@ export default function Header() {
             {/* Notification Bell */}
             {username && (
               <div className="dropend" ref={notifRef}>
-                <button className="dropend-toggle notif-btn" onClick={handleNotifClick}>
-                  🔔 {unreadCount > 0 && <span className="notif-count">{unreadCount}</span>}
+                <button
+                  className="dropend-toggle notif-btn"
+                  onClick={handleNotifClick}
+                >
+                  🔔{" "}
+                  {unreadCount > 0 && (
+                    <span className="notif-count">{unreadCount}</span>
+                  )}
                 </button>
                 {notifOpen && (
                   <ul className="dropdown-menu notif-dropdown">
@@ -144,22 +205,43 @@ export default function Header() {
             {username ? (
               <>
                 <span className="username">
-                  Hi, <strong><Link to="/myprofile" className="username-link">{username}</Link></strong>
+                  Hi,{" "}
+                  <strong>
+                    <Link to="/myprofile" className="username-link">
+                      {username}
+                    </Link>
+                  </strong>
                 </span>
-                <button className="btn logout-btn desktop-logout" onClick={handleLogout}>Logout</button>
+                <button
+                  className="btn logout-btn desktop-logout"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="btn login-btn">Login</Link>
-                <Link to="/register" className="btn register-btn">Register</Link>
+                <Link to="/login" className="btn login-btn">
+                  Login
+                </Link>
+                <Link to="/register" className="btn register-btn">
+                  Register
+                </Link>
               </>
             )}
           </div>
         </div>
       </nav>
-    
 
       <style>{`
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          background-attachment: fixed; /* parallax-like */
+          color: white;
+        }
         .navbar {
           margin: 0;
           padding: 10px 20px;
