@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 

@@ -1,87 +1,105 @@
-import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase.js"; // adjust import
+    import { useEffect, useState } from "react";
+  import { collection, getDocs } from "firebase/firestore";
+  import { db } from "../../firebase.js"; // adjust import
 
-const PostManagement = () => {
-  const [postData, setPostData] = useState([]);
+  const PostManagement = () => {
+    const [postData, setPostData] = useState([]);
+    const [searchTerm, setSearchTerm] = useState(""); // 🔍 Search state
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const postsSnap = await getDocs(collection(db, "posts"));
-        const postArr = [];
+    useEffect(() => {
+      const fetchPosts = async () => {
+        try {
+          const postsSnap = await getDocs(collection(db, "posts"));
+          const postArr = [];
 
-        postsSnap.forEach((doc) => {
-          const post = doc.data();
+          postsSnap.forEach((doc) => {
+            const post = doc.data();
 
-          let postDate = "Unknown";
-          if (post.createdAt) {
-            if (typeof post.createdAt.toDate === "function") {
-              postDate = post.createdAt.toDate().toLocaleDateString();
-            } else {
-              postDate = new Date(post.createdAt).toLocaleDateString();
+            let postDate = "Unknown";
+            if (post.createdAt) {
+              if (typeof post.createdAt.toDate === "function") {
+                postDate = post.createdAt.toDate().toLocaleDateString();
+              } else {
+                postDate = new Date(post.createdAt).toLocaleDateString();
+              }
             }
-          }
 
-          postArr.push({
-            date: postDate,
-            email: post.author || "N/A",
+            postArr.push({
+              date: postDate,
+              email: post.author || "N/A",
+            });
           });
-        });
 
-        // ✅ Group by date only
-        const grouped = postArr.reduce((acc, item) => {
-          if (!acc[item.date]) {
-            acc[item.date] = { date: item.date, count: 0, emails: new Set() };
-          }
-          acc[item.date].count += 1;
-          acc[item.date].emails.add(item.email);
-          return acc;
-        }, {});
+          // ✅ Group by date only
+          const grouped = postArr.reduce((acc, item) => {
+            if (!acc[item.date]) {
+              acc[item.date] = { date: item.date, count: 0, emails: new Set() };
+            }
+            acc[item.date].count += 1;
+            acc[item.date].emails.add(item.email);
+            return acc;
+          }, {});
 
-        // Convert Set → Array for rendering
-        const finalData = Object.values(grouped).map((g) => ({
-          date: g.date,
-          count: g.count,
-          emails: Array.from(g.emails),
-        }));
+          // Convert Set → Array for rendering
+          const finalData = Object.values(grouped).map((g) => ({
+            date: g.date,
+            count: g.count,
+            emails: Array.from(g.emails),
+          }));
 
-        setPostData(finalData);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-      }
-    };
+          setPostData(finalData);
+        } catch (err) {
+          console.error("Error fetching posts:", err);
+        }
+      };
 
-    fetchPosts();
-  }, []);
+      fetchPosts();
+    }, []);
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2 className="headings">Post Management</h2>
-      <table
-        border="1"
-        cellPadding="8"
-        style={{ width: "100%", textAlign: "left" }}
-      >
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Count</th>
-            <th>Emails</th>
-          </tr>
-        </thead>
-        <tbody>
-          {postData.map((row, idx) => (
-            <tr key={idx}>
-              <td>{row.date}</td>
-              <td>{row.count}</td>
-              <td>{row.emails.join(", ")}</td>
+    // 🔍 Filter by email
+    const filteredData = postData
+      .map((row) => ({
+        ...row,
+        emails: row.emails.filter((email) =>
+          email.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+      }))
+      .filter((row) => row.emails.length > 0);
+
+    return (
+      <div style={{ padding: "20px" }}>
+        <h2 className="headings">Post Management</h2>
+
+        {/* 🔍 Search Input */}
+        <input
+          type="text"
+          placeholder="Search by email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ marginBottom: "10px", padding: "5px", width: "250px", color:"black" }}
+        />
+
+        <table border="1" cellPadding="8" style={{ width: "100%", textAlign: "left", color:"black" }}>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Count</th>
+              <th>Emails</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
+          </thead>
+          <tbody>
+            {filteredData.map((row, idx) => (
+              <tr key={idx}>
+                <td>{row.date}</td>
+                <td>{row.count}</td>
+                <td>{row.emails.join(", ")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
-export default PostManagement;
+  export default PostManagement;
+
