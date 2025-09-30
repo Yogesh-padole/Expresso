@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
-import Header from './header';
-import UserPosts from '../components/userposts';
-
+import { Link } from "react-router-dom";
+import Header from "./header";
+import UserPosts from "../components/userposts";
 
 export default function Dashboard() {
   return (
@@ -9,18 +8,19 @@ export default function Dashboard() {
       <Header />
       <div className="dashboard-container">
         <div className="dashboard-content">
-          <h1 className="dashboard-title">Dashboard</h1>
-          <p className="dashboard-subtitle">
-            Welcome to dashboard! Here you can see all Stories and Posts, Also  add yours, and more.
-          </p>
-
           <UserPosts />
-          
-
         </div>
       </div>
 
       <style>{`
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          background-attachment: fixed; /* parallax-like */
+          color: white;
+        }
         .dashboard-container {
           background-color: transparent;
           min-height: 100vh;

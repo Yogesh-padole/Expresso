@@ -74,6 +74,24 @@ export default function CommentModal({ postId, onClose }) {
       createdAt: serverTimestamp(),
     });
 
+    // 🔔 Create notification for post owner
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+    if (postSnap.exists()) {
+      const postData = postSnap.data();
+      if (user.uid !== postData.authorId) {
+        await addDoc(collection(db, "notifications"), {
+          userId: postData.authorId,
+          senderId: user.uid,
+          postId,
+          type: "comment",
+          message: `${username} commented on your post.`,
+          createdAt: serverTimestamp(),
+          seen: false,
+        });
+      }
+    }
+
     setNewComment("");
   };
 
@@ -111,6 +129,24 @@ export default function CommentModal({ postId, onClose }) {
       authorId: user.uid,
       createdAt: serverTimestamp(),
     });
+
+    // 🔔 Create notification for comment author
+    const commentRef = doc(db, "posts", postId, "comments", commentId);
+    const commentSnap = await getDoc(commentRef);
+    if (commentSnap.exists()) {
+      const commentData = commentSnap.data();
+      if (user.uid !== commentData.authorId) {
+        await addDoc(collection(db, "notifications"), {
+          userId: commentData.authorId,
+          senderId: user.uid,
+          postId,
+          type: "reply",
+          message: `${username} replied to your comment.`,
+          createdAt: serverTimestamp(),
+          seen: false,
+        });
+      }
+    }
   };
 
   // 🔹 Delete Reply

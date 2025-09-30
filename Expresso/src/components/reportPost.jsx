@@ -13,6 +13,14 @@ export const reportPost = async (postId, reason = "Inappropriate content") => {
     throw new Error("You must be logged in to report a post.");
   }
 
+  if (!postId || postId.trim() === "") {
+    throw new Error("Invalid post ID.");
+  }
+
+  if (!reason || reason.trim() === "") {
+    throw new Error("Please select a reason for reporting.");
+  }
+
   try {
     await addDoc(collection(db, "reports"), {
       postId,

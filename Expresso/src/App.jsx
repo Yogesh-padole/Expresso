@@ -8,8 +8,11 @@ import Posts from "./components/myposts";
 import Myprofile from "./components/myprofile";
 import Saved from "./components/saved";
 import TagPosts from "./components/tagposts";
+import Feedback from "./components/feedback"; // ✅ Import Feedback component
 
-import "./App.css";
+import "./index.css";
+import Navbar from "./components/Navbar";
+import AdminPanel from "./components/pages/AdminPanel";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -19,12 +22,22 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route
+          path="/Admin"
+          element={
+            <div className="App">
+              <Navbar />
+              <AdminPanel />
+            </div>
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/myposts" element={<Posts />} />
         <Route path="/myprofile" element={<Myprofile />} />
         <Route path="/saved" element={<Saved />} />
         <Route path="/tags/:tag" element={<TagPosts />} />
+        <Route path="/feedback" element={<Feedback />} />
       </Routes>
     </Router>
   );

@@ -5,6 +5,8 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { Link, useNavigate } from "react-router-dom";
+import { getLogUser } from "../../utils/firestoreHelpers";
+import "../../index.css";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -28,9 +30,18 @@ export default function Login() {
     }
     try {
       setLoading(true);
-      await signInWithEmailAndPassword(auth, form.email, form.password);
+      const retrunlog = await signInWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
       alert("Login successful!");
-      Navigate("/dashboard");
+      const logUserData = await getLogUser(retrunlog.user.uid);
+      if (logUserData.role === "Admin") {
+        Navigate("/Admin");
+      } else {
+        Navigate("/dashboard");
+      }
       setForm({ email: "", password: "" });
     } catch (err) {
       console.error("Login error:", err);
@@ -133,6 +144,14 @@ export default function Login() {
 
       <style>
         {`
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            background-attachment: fixed; /* parallax-like */
+            color: white;
+          }
           .container {
             max-width: 500px;
             margin: auto;

@@ -1,11 +1,13 @@
-
+// Firebase configuration and initialization
+// This file sets up Firebase services for authentication and Firestore database
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, serverTimestamp } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 
-
-
+// Firebase configuration object
+// IMPORTANT: Replace these with your actual Firebase project credentials
+// Get these from Firebase Console > Project Settings > General > Your apps
 const firebaseConfig = {
   apiKey: "AIzaSyBJm9zoegmjc0wDMWK2aaoHu_kHfElx2Lk",
   authDomain: "expresso-b7f8d.firebaseapp.com",
@@ -13,12 +15,21 @@ const firebaseConfig = {
   storageBucket: "expresso-b7f8d.firebasestorage.app",
   messagingSenderId: "475947216350",
   appId: "1:475947216350:web:2eedba4985743468ca014f",
-  measurementId: "G-9CLG2YLX9S"
 };
-// Initialize Firebase
+
+// Initialize Firebase app with configuration
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+export const functions = getFunctions(app);
+
+// Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
+
+// Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
 
+// Export serverTimestamp for consistent timestamp creation
+export { serverTimestamp };
+
+// Export the app instance for any additional Firebase services
 export default app;

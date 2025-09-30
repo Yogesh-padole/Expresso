@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
@@ -10,7 +10,8 @@ export default function Home() {
             Welcome to <span className="highlight">Expresso</span> ☕
           </h1>
           <p className="subtitle">
-            Share experiences, moments, and feelings—anonymously or openly—without judgment.
+            Share experiences, moments, and feelings—anonymously or
+            openly—without judgment.
           </p>
         </div>
 
@@ -19,9 +20,10 @@ export default function Home() {
           <section>
             <h2>About Expresso</h2>
             <p>
-              Expresso is a safe space to express your thoughts, memorable moments, and even personal
-              regrets. Whether it’s a happy memory, a life lesson, or something heavy on your mind—this
-              is your corner to be heard and to read others’ journeys.
+              Expresso is a safe space to express your thoughts, memorable
+              moments, and even personal regrets. Whether it’s a happy memory, a
+              life lesson, or something heavy on your mind—this is your corner
+              to be heard and to read others’ journeys.
             </p>
           </section>
 
@@ -39,11 +41,19 @@ export default function Home() {
           <section>
             <h2>Community Guidelines</h2>
             <ul>
-              <li>Be respectful—no harassment, bullying, or personal attacks.</li>
-              <li>Do not harm or target any person, religion, community, or group.</li>
+              <li>
+                Be respectful—no harassment, bullying, or personal attacks.
+              </li>
+              <li>
+                Do not harm or target any person, religion, community, or group.
+              </li>
               <li>No hate speech, abusive language, or explicit content.</li>
-              <li>Share responsibly—avoid sharing others’ private information.</li>
-              <li>Use the report option for any content that breaks these rules.</li>
+              <li>
+                Share responsibly—avoid sharing others’ private information.
+              </li>
+              <li>
+                Use the report option for any content that breaks these rules.
+              </li>
             </ul>
           </section>
 
@@ -54,21 +64,17 @@ export default function Home() {
 
         {/* Buttons */}
         <div className="buttons">
-          <Link to="/login" className="btn btn-primary">Go to Login</Link>
-          <Link to="/register" className="btn btn-secondary">Register</Link>
+          <Link to="/login" className="btn btn-primary">
+            Go to Login
+          </Link>
+          <Link to="/register" className="btn btn-secondary">
+            Register
+          </Link>
         </div>
       </div>
 
       {/* Styles */}
-      <style>{`
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          background-attachment: fixed; /* parallax-like */
-          color: white;
-        }
+      <style>{` 
 
         .home-container {
           padding: 40px 20px;
