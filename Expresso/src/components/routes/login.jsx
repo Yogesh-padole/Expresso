@@ -11,7 +11,7 @@ import "../../index.css";
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // New state
+  const [showPassword, setShowPassword] = useState(false);
   const Navigate = useNavigate();
 
   const auth = getAuth();
@@ -79,13 +79,14 @@ export default function Login() {
   };
 
   return (
-    <div>
-      <div className="container mt-5">
-        <h2>Login</h2>
+    <div className="login-page">
+      <div className="login-card">
+        <h2 className="title">Welcome Back 👋</h2>
+        <p className="subtitle">Login to continue</p>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="Email" className="form-label">
-              Email address:
+              Email address
             </label>
             <input
               type="email"
@@ -96,15 +97,14 @@ export default function Login() {
               className="form-control"
             />
           </div>
-          <br />
 
           <div className="mb-3">
             <label htmlFor="Password1" className="form-label">
-              Password:
+              Password
             </label>
             <div className="password-wrapper">
               <input
-                type={showPassword ? "text" : "password"} // Toggle type
+                type={showPassword ? "text" : "password"}
                 id="Password1"
                 value={form.password}
                 onChange={handleChange}
@@ -116,17 +116,14 @@ export default function Login() {
                 className="toggle-btn"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
           </div>
-          <br />
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
-          <br />
-          <br />
 
           <button
             type="button"
@@ -136,56 +133,80 @@ export default function Login() {
             Forgot Password?
           </button>
         </form>
-      </div>
 
-      <p className="mt-3">
-        Do not have an account? <Link to="/register">Register here</Link>.
-      </p>
+        <p className="mt-3">
+          Don’t have an account? <Link to="/register">Register here</Link>.
+        </p>
+      </div>
 
       <style>
         {`
-          body {
-            margin: 0;
-            padding: 0;
+          .login-page {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            background-attachment: fixed; /* parallax-like */
             color: white;
+            padding: 10px;
           }
-          .container {
-            max-width: 500px;
-            margin: auto;
-            margin-top: 80px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            height: 100%;
+
+          .login-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
             width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            background-color: rgba(33, 31, 31, 0.5);
-            padding: 20px;
-            color: white;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.8s ease-in-out;
           }
-          .form-label {
+
+          .title {
+            font-size: 2rem;
+            margin-bottom: 10px;
             font-weight: bold;
           }
+
+          .subtitle {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+          }
+
+          .form-label {
+            display: block;
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: 500;
+          }
+
           .form-control {
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            padding: 0.6em 1.2em;
-            margin-right: 10px;
+            border-radius: 10px;
+            border: none;
+            padding: 12px;
             font-size: 1em;
-            font-weight: 400;
-            font-family: inherit;
             width: 100%;
-            background-color: transparent;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            outline: none;
+            transition: 0.3s ease;
           }
+
+          .form-control:focus {
+            box-shadow: 0 0 8px #667eea;
+          }
+
           .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.6);
           }
+
           .password-wrapper {
             position: relative;
           }
+
           .toggle-btn {
             position: absolute;
             right: 10px;
@@ -193,23 +214,84 @@ export default function Login() {
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: #9599e7;
+            font-size: 18px;
             cursor: pointer;
-            font-size: 14px;
+            color: white;
           }
+
+          .btn-primary {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s ease;
+          }
+
+          .btn-primary:hover {
+            background: linear-gradient(90deg, #5a67d8, #6b46c1);
+            transform: scale(1.03);
+          }
+
           .btn-link {
+            margin-top: 15px;
+            display: block;
             background: none;
             border: none;
-            color: #9599e7;
+            color: #c3c9f5;
             text-decoration: underline;
             cursor: pointer;
             font-size: 14px;
-            padding: 0;
           }
+
           .mt-3 {
             margin-top: 1rem;
-            color: white;
-            text-align: center;
+            color: #f0f0f0;
+            font-size: 0.9rem;
+          }
+
+          a {
+            color: #ffd369;
+            text-decoration: none;
+          }
+
+          a:hover {
+            text-decoration: underline;
+          }
+
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+
+          /* 📱 Mobile responsiveness */
+          @media (max-width: 480px) {
+            .login-card {
+              padding: 20px;
+              border-radius: 12px;
+            }
+
+            .title {
+              font-size: 1.6rem;
+            }
+
+            .subtitle {
+              font-size: 0.9rem;
+            }
+
+            .form-control {
+              font-size: 0.95rem;
+              padding: 10px;
+            }
+
+            .btn-primary {
+              font-size: 0.95rem;
+              padding: 10px;
+            }
           }
         `}
       </style>

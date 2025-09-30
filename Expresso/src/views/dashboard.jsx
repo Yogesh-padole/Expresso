@@ -13,14 +13,15 @@ export default function Dashboard() {
       </div>
 
       <style>{`
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          background-attachment: fixed; /* parallax-like */
-          color: white;
-        }
+      body {
+  background-image: url('/background.png');
+  background-repeat: no-repeat;      /* prevents repeating */
+  background-size: cover;            /* makes it cover the whole area */
+  background-position: center;       /* centers the image */
+  background-attachment: fixed;      /* optional: makes it fixed when scrolling */
+}
+
+       
         .dashboard-container {
           background-color: transparent;
           min-height: 100vh;
@@ -30,6 +31,7 @@ export default function Dashboard() {
           justify-content: center;
           align-items: center;
           margin-top: -150px;
+          
         }
 
         .dashboard-content {
