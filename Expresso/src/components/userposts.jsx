@@ -131,7 +131,6 @@ export default function UserPosts() {
   };
 
   // 🔹 Report post
-  // 🔹 Report post
   const handleReportPost = async (postId, reason) => {
     if (!user) {
       alert("You must be logged in to report");
@@ -139,22 +138,19 @@ export default function UserPosts() {
     }
     if (userReports.includes(postId)) return;
 
-    // get post details
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
 
     try {
       await addDoc(collection(db, "reports"), {
         postId,
-        reportedBy: user.uid, // reporter UID
-        reportedByEmail: user.email || null, // reporter email
+        reportedBy: user.uid,
+        reportedByEmail: user.email || null,
         reason,
         createdAt: serverTimestamp(),
-
-        // extra fields from post
         postTitle: post.title || null,
         postAuthor: post.author || "Anonymous",
-        postAuthorId: post.authorId || null, // optional if you want UID
+        postAuthorId: post.authorId || null,
       });
 
       setUserReports((prev) => [...prev, postId]);
@@ -167,7 +163,9 @@ export default function UserPosts() {
     }
   };
 
+  // 🔹 Toggle post expand (mobile only)
   const toggleExpand = (postId) => {
+    if (window.innerWidth > 600) return; // only on mobile
     setExpandedPosts((prev) =>
       prev.includes(postId)
         ? prev.filter((id) => id !== postId)
@@ -249,125 +247,128 @@ export default function UserPosts() {
         {posts.length === 0 ? (
           <p>No posts yet. Be the first to share something!</p>
         ) : (
-          posts.map((post) => (
-            <div className="post" key={post.id}>
-              <div className="post-header">
-                <h4>{post.title}</h4>
+          posts.map((post) => {
+            const isMobile = window.innerWidth <= 600;
+            const isExpanded = expandedPosts.includes(post.id) || !isMobile; // desktop always expanded
 
-                {/* Three dots menu */}
-                <div className="menu-wrapper">
-                  <button
-                    className="menu-btn"
-                    onClick={() =>
-                      setOpenMenu(openMenu === post.id ? null : post.id)
-                    }
-                  >
-                    ⋮
-                  </button>
+            return (
+              <div className="post" key={post.id}>
+                <div className="post-header">
+                  <h4>{post.title}</h4>
 
-                  {openMenu === post.id && (
-                    <div className="menu-dropdown">
-                      {userReports.includes(post.id) ? (
-                        <button disabled>Reported</button>
-                      ) : showReportReasonsForPost === post.id ? (
-                        reportReasons.map((reason) => (
+                  {/* Three dots menu */}
+                  <div className="menu-wrapper">
+                    <button
+                      className="menu-btn"
+                      onClick={() =>
+                        setOpenMenu(openMenu === post.id ? null : post.id)
+                      }
+                    >
+                      ⋮
+                    </button>
+
+                    {openMenu === post.id && (
+                      <div className="menu-dropdown">
+                        {userReports.includes(post.id) ? (
+                          <button disabled>Reported</button>
+                        ) : showReportReasonsForPost === post.id ? (
+                          reportReasons.map((reason) => (
+                            <button
+                              key={reason}
+                              onClick={() => handleReportPost(post.id, reason)}
+                            >
+                              {reason}
+                            </button>
+                          ))
+                        ) : (
                           <button
-                            key={reason}
-                            onClick={() => handleReportPost(post.id, reason)}
+                            onClick={() =>
+                              setShowReportReasonsForPost(post.id)
+                            }
                           >
-                            {reason}
+                            Report
                           </button>
-                        ))
-                      ) : (
-                        <button
-                          onClick={() => setShowReportReasonsForPost(post.id)}
-                        >
-                          Report
-                        </button>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <p
-                className={`post-content ${
-                  expandedPosts.includes(post.id) ? "expanded" : ""
-                }`}
-                onClick={() => toggleExpand(post.id)}
-              >
-                {post.content}
-              </p>
+                <p
+                  className={`post-content ${isExpanded ? "expanded" : ""}`}
+                  onClick={() => toggleExpand(post.id)}
+                >
+                  {post.content}
+                </p>
 
-              {post.tags && post.tags.length > 0 && (
-                <small className="post-tags">
-                  Tags:{" "}
-                  {post.tags.map((tag) => (
-                    <Link key={tag} to={`/tags/${tag}`} className="tag-link">
-                      #{tag}
-                    </Link>
-                  ))}
+                {/* Only show read more/less on mobile */}
+                {isMobile && post.content.length > 150 && (
+                  <span
+                    className="read-more"
+                    onClick={() => toggleExpand(post.id)}
+                  >
+                    {isExpanded ? "Read less ▲" : "Read more ▼"}
+                  </span>
+                )}
+
+                {post.tags && post.tags.length > 0 && (
+                  <small className="post-tags">
+                    Tags:{" "}
+                    {post.tags.map((tag) => (
+                      <Link key={tag} to={`/tags/${tag}`} className="tag-link">
+                        #{tag}
+                      </Link>
+                    ))}
+                  </small>
+                )}
+                <br />
+                <small className="post-author">
+                  — {post.author || "Anonymous"}
                 </small>
-              )}
-              <br />
-              <small className="post-author">
-                — {post.author || "Anonymous"}
-              </small>
 
-              {/* Like/Reaction */}
-              <Reaction postId={post.id} />
-            </div>
-          ))
+                {/* Like/Reaction */}
+                <Reaction postId={post.id} />
+              </div>
+            );
+          })
         )}
       </div>
 
       {/* Styles */}
       <style>{`
-         body {
+        body {
           margin: 0;
           padding: 0;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-          background-attachment: fixed; /* parallax-like */
+          background: transparent;
+          background-image: url('/background.png');
+          background-attachment: fixed;
           color: white;
         }
+
         .user-posts-container {
           max-width: 700px;
-          margin: auto;
+          margin: 80px auto 20px auto;
           padding: 1rem;
           color: #dce7f3;
         }
 
-        h2 { color: #a8c9ff; margin-bottom: 0.2rem; margin-top:100px; font-size: 1.8rem; }
-        p { margin-bottom: 1.2rem; color: #bcd2f5; font-size: 1rem; }
-
-        .post-content {
-          color: #d4e3f7;
-          font-size: 0.95rem;
-          margin-bottom: 0.3rem;
-          white-space: pre-wrap;
-          word-break: break-word;
+        h2 {
+          color: #a8c9ff;
+          margin-bottom: 0.2rem;
+          font-size: 1.8rem;
+          text-align: center;
+          text-shadow: 0 0 6px rgba(168,201,255,0.7);
         }
 
-        @media (max-width: 600px) {
-          .post-content {
-            display: -webkit-box;
-            -webkit-line-clamp: 8;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            cursor: pointer;
-          }
-
-          .post-content::after {
-            content: " ... Read more";
-            color: #9ec8ff;
-            font-size: 0.85rem;
-          }
-
-          .post-content.expanded { display: block; }
-          .post-content.expanded::after { content: ""; }
+        p {
+          margin-bottom: 1.2rem;
+          color: #bcd2f5;
+          font-size: 1rem;
+          text-align: center;
         }
 
+        /* Floating Button */
         .floating-btn {
           position: fixed;
           bottom: 20px;
@@ -388,55 +389,65 @@ export default function UserPosts() {
           transition: all 0.25s ease-in-out;
           z-index: 100;
         }
-
         .floating-btn:hover { transform: scale(1.15) rotate(8deg); }
 
+        /* Overlay Modal */
         .overlay {
           position: fixed;
           top: 0; left: 0;
           width: 100%; height: 100%;
-          background: rgba(0,0,0,0.7);
+          background: rgba(0,0,0,0.75);
           display: flex; align-items: center; justify-content: center;
           z-index: 1000; padding: 1rem;
+          animation: fadeIn 0.3s ease-in-out;
         }
 
         .post-modal {
-          background: rgba(25,40,70,0.95);
+          background: rgba(33,31,31,0.95);
           padding: 1.5rem;
-          border-radius: 12px;
+          border-radius: 15px;
           width: 100%; max-width: 500px;
           position: relative;
-          box-shadow: 0px 8px 20px rgba(0,0,0,0.4);
+          box-shadow: 0px 8px 25px rgba(0,0,0,0.5);
           color: #dce7f3;
+          animation: slideUp 0.3s ease-in-out;
         }
 
         .close-btn {
           position: absolute; top: 10px; right: 10px;
           border: none; background: transparent;
           font-size: 1.5rem; cursor: pointer; color: #fff;
+          transition: 0.2s ease;
         }
+        .close-btn:hover { color: #ff6b81; transform: scale(1.1); }
 
         input, textarea {
-          width: 100%; margin-bottom: 0.8rem; padding: 0.6rem;
-          border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
+          width: 100%; margin-bottom: 0.8rem; padding: 0.8rem;
+          border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
           background: rgba(255,255,255,0.05); color: #e5f0ff; font-size: 1rem;
+          outline: none; transition: 0.3s ease;
         }
-        textarea { height: 80px; resize: vertical; }
+        input:focus, textarea:focus { box-shadow: 0 0 10px #4c8dd4; }
+
+        textarea { height: 90px; resize: vertical; }
 
         .post-btn {
-          padding: 0.6rem 1.2rem; border: none;
+          padding: 0.8rem 1.2rem; border: none;
           background: linear-gradient(145deg, #3b6fa5, #4c8dd4);
-          color: white; border-radius: 8px; cursor: pointer;
+          color: white; border-radius: 10px; cursor: pointer;
           font-weight: bold; width: 100%; font-size: 1rem;
+          transition: 0.25s ease;
         }
+        .post-btn:hover { transform: scale(1.03); }
 
         .tag-selector p { color: #bcd2f5; margin-bottom: 0.5rem; font-size: 0.95rem; }
         .tags-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
-
         .tag-btn {
-          padding: 5px 10px; border-radius: 20px; border: 1px solid #4c8dd4;
+          padding: 6px 12px; border-radius: 20px; border: 1px solid #4c8dd4;
           background: transparent; color: #a8c9ff; cursor: pointer; font-size: 0.85rem;
+          transition: 0.2s ease;
         }
+        .tag-btn:hover { background: rgba(76,141,212,0.3); }
         .tag-btn.selected { background: #4c8dd4; color: white; }
 
         .anon-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;
@@ -452,38 +463,67 @@ export default function UserPosts() {
         }
         .anon-toggle input[type="checkbox"]:checked::before { transform: translateX(18px); }
 
+        /* Posts list styling */
         .posts-list .post {
-          background: rgba(20,35,60,0.7);
-          border: 1px solid rgba(255,255,255,0.1);
-          padding: 0.8rem; margin-bottom: 0.8rem; border-radius: 10px;
-          position: relative; word-break: break-word;
-        }
+    background: rgba(20,35,60,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    border-radius: 10px;
+    position: relative;
+    word-break: break-word;
+  }
+        .posts-list .post:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.35); }
 
-        .posts-list .post h4 { margin-bottom: 0.3rem; color: #a8c9ff; font-size: 1.1rem; }
-        .posts-list .post p { margin-bottom: 0.3rem; color: #d4e3f7; font-size: 0.95rem; }
-        .post-tags { color: #9ec8ff; font-size: 0.85rem; }
+        .posts-list .post h4 { margin-bottom: 0.3rem; color: #a8c9ff; font-size: 1.2rem; }
+        .posts-list .post p {
+          margin-bottom: 0.5rem;
+          color: #d4e3f7;
+          font-size: 0.95rem;
+          white-space: pre-wrap;
+          word-break: break-word;
+          cursor: pointer;
+          max-height: 8rem;
+          overflow: hidden;
+          transition: max-height 0.3s ease;
+        }
+        .posts-list .post p.expanded { max-height: 500px; }
+
+        .read-more { color: #9ec8ff; cursor: pointer; font-size: 0.85rem; display: block; margin-bottom: 6px; }
+        .post-tags { color: #9ec8ff; font-size: 0.85rem; margin-bottom: 4px; }
         .tag-link { color: #9ec8ff; margin-right: 6px; text-decoration: none; }
         .tag-link:hover { text-decoration: underline; }
         .post-author { color: #8faed1; font-size: 0.8rem; }
 
+        /* Menu styling */
         .menu-wrapper { position: absolute; top: 10px; right: 10px; display: inline-block; }
         .menu-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #bcd2f5; }
         .menu-dropdown {
           position: absolute; right: 0; top: 25px; background: #2b3e5c;
-          border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+          border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
           padding: 0.3rem 0.5rem; z-index: 10;
           display: flex; flex-direction: column; gap: 6px;
         }
         .menu-dropdown button {
-          display: block; padding: 0.4rem 0.8rem; background: transparent;
+          display: block; padding: 0.5rem 0.8rem; background: transparent;
           border: none; text-align: left; color: #dce7f3; cursor: pointer;
           font-size: 0.9rem; white-space: nowrap;
         }
         .menu-dropdown button:hover:not(:disabled) { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Mobile responsiveness */
         @media (max-width: 600px) {
           .user-posts-container { padding: 0.5rem; }
-          .post-modal { padding: 1rem; max-width: 95%; }
+          .post-modal { padding: 1rem; max-width: 95%; border-radius: 12px; }
           .post-btn { font-size: 0.95rem; }
           .tag-btn { font-size: 0.8rem; padding: 4px 8px; }
           .posts-list .post h4 { font-size: 1rem; }
@@ -491,7 +531,7 @@ export default function UserPosts() {
           .post-tags { font-size: 0.75rem; }
           .post-author { font-size: 0.7rem; }
           .menu-dropdown { right: 0; top: 30px; min-width: 120px; padding: 0.5rem 0; border-radius: 8px; }
-          .menu-dropdown button { font-size: 0.9rem; padding: 0.5rem 1rem; width: 100%; text-align: left; }
+          .menu-dropdown button { font-size: 0.85rem; padding: 0.5rem 1rem; }
           .menu-btn { font-size: 1.4rem; padding: 4px; }
         }
       `}</style>

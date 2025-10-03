@@ -474,7 +474,7 @@ const ReportsManagement = () => {
                     <p>
                       <strong>Content:</strong>
                     </p>
-                    <div className="Adpost-content">{postDetails.content}</div>
+                    <div className="post-content">{postDetails.content}</div>
                   </div>
 
                   <div className="report-section">

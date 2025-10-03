@@ -47,10 +47,10 @@ const AdminPanel = () => {
 
       // Create user doc in Firestore
       await setDoc(doc(db, "users", cred.user.uid), {
+        contact: "",
         createdAt: serverTimestamp(),
         email: userData.email,
         lastactive: "",
-        // name: userData.name,
         password: userData.password,
         role: userData.role, // important for Cloud Function to detect admin
         status: userData.status,
