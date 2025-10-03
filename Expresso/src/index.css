@@ -4,7 +4,6 @@
   box-sizing: border-box;
 }
 
-
 .admin-body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     sans-serif;
@@ -16,8 +15,7 @@
   margin: 0;
   padding: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: transparent;
-  background-image: url('/background.png');
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
   background-attachment: fixed; /* parallax-like */
   color: white;
 }
@@ -37,6 +35,7 @@
 .nav-container {
   max-width: 1200px;
   margin: 0 auto;
+  margin-right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -100,7 +99,7 @@
   width: 260px;
   background: #1e293b;
   color: white;
-  padding: 2rem 0;
+  padding: 1.5rem 0;
   position: fixed;
   height: 100vh;
   z-index: 1000;
@@ -328,6 +327,7 @@
 }
 
 .search-container input {
+  color: #111827;
   width: 100%;
   padding: 0.625rem 0.625rem 0.625rem 2.5rem;
   border: 1px solid #d1d5db;
@@ -588,6 +588,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  color: #000;
 }
 
 .modal {
@@ -652,20 +653,21 @@
   font-size: 0.875rem;
 }
 
-.toggle-btn {
+.Admin_toggle-btn {
   position: absolute;
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #9599e7;
+  color: #111827;
   cursor: pointer;
   font-size: 14px;
 }
 
 .form-group input,
 .form-group select {
+  color: #111827;
   width: 100%;
   padding: 0.625rem;
   border: 1px solid #d1d5db;
@@ -679,6 +681,10 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group select {
+  color: #d1d5db;
 }
 
 .form-row {
@@ -1198,6 +1204,7 @@
 }
 
 .search-bar input {
+  color: #111827;
   width: 100%;
   padding: 0.625rem 0.625rem 0.625rem 2.5rem;
   border: 1px solid #d1d5db;
@@ -1976,7 +1983,7 @@
 .actions-cell {
   display: flex;
   gap: 0.5rem;
-  justify-content: center;
+  justify-content: start;
 }
 
 .action-btn {
@@ -1999,6 +2006,10 @@
 .action-btn.edit {
   background: #6c757d;
   color: white;
+}
+
+.action-btn.disable {
+  color: #1e293b;
 }
 
 .action-btn.delete {
@@ -2095,10 +2106,10 @@ input {
   }
 }
 
-.btn {
+/* .btn {
   border-color: #3498db;
   color: #3498db;
-}
+} */
 .btn:hover {
   background-color: #3498db;
   color: white;

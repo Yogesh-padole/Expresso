@@ -4,7 +4,6 @@ const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
   const [showPassword, setShowPassword] = useState(false); // show/hide password
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     username: "",
     password: "",
@@ -16,7 +15,6 @@ const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
     e.preventDefault();
     onAddUser(formData);
     setFormData({
-      name: "",
       email: "",
       username: "",
       password: "",
@@ -40,7 +38,7 @@ const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Full Name</label>
             <input
               type="text"
@@ -50,42 +48,62 @@ const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
               }
               required
             />
-          </div>
+          </div> */}
 
           <div className="form-group">
             <label>Email</label>
-            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value }) } required />
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              required
+            />
           </div>
 
-          <div className="form-group"> 
+          <div className="form-group">
             <label>Username</label>
-            <input  type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value }) } required />
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
+              required
+            />
           </div>
 
           <div className="form-group">
             <label>Password</label>
-            <input
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
-              minLength={6}
-            />
-            <button
-              type="button"
-              className="toggle-btn"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
+            <div className="password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                className="Admin_toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label>Role</label>
-              <select value={formData.role} onChange={(e) =>  setFormData({ ...formData, role: e.target.value }) }
+              <select
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
               >
                 <option value="User">User</option>
                 <option value="Admin">Admin</option>

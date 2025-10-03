@@ -18,11 +18,6 @@ import {
   updateUser,
   deleteUsersData,
 } from "../../utils/firestoreHelpers";
-// import {
-//   adminDisableUser,
-//   adminDeleteUser,
-//   enableUserAuth,
-// } from "../../utils/firestoreAdminHelpers.js"; // New import
 
 const UserManagement = ({ onAddUser }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,10 +79,6 @@ const UserManagement = ({ onAddUser }) => {
 
   // Helper to determine user status
   const getUserStatus = (user) => {
-    // Check Firestore disabled field first, then status field, then default to active
-    // if (user.disabled !== undefined) {
-    //   return user.disabled ? "Disabled" : "Active";
-    // }
     if (user.status) {
       return user.status;
     }
@@ -355,9 +346,9 @@ const UserManagement = ({ onAddUser }) => {
           <table className="user-table">
             <thead>
               <tr>
-                <th>Full Name</th>
                 <th>Email</th>
                 <th>Username</th>
+                <th>Contact</th>
                 <th>Status</th>
                 <th>Role</th>
                 <th>Joined Date</th>
@@ -368,34 +359,7 @@ const UserManagement = ({ onAddUser }) => {
             <tbody>
               {filteredUsers.map((user) => (
                 <tr key={user.userId} className="user-row">
-                  <td className="user-name-cell">
-                    {editingUserId === user.userId ? (
-                      <input
-                        type="text"
-                        value={editedUser.name || ""}
-                        onChange={(e) =>
-                          handleFieldChange("name", e.target.value)
-                        }
-                        className="edit-input"
-                      />
-                    ) : (
-                      <span>{user.name}</span>
-                    )}
-                  </td>
-                  <td>
-                    {editingUserId === user.userId ? (
-                      <input
-                        type="email"
-                        value={editedUser.email || ""}
-                        onChange={(e) =>
-                          handleFieldChange("email", e.target.value)
-                        }
-                        className="edit-input"
-                      />
-                    ) : (
-                      user.email
-                    )}
-                  </td>
+                  <td>{user.email}</td>
                   <td>
                     {editingUserId === user.userId ? (
                       <input
@@ -408,6 +372,20 @@ const UserManagement = ({ onAddUser }) => {
                       />
                     ) : (
                       user.username || user.name
+                    )}
+                  </td>
+                  <td className="contact-cell">
+                    {editingUserId === user.userId ? (
+                      <input
+                        type="text"
+                        value={editedUser.contact || ""}
+                        onChange={(e) =>
+                          handleFieldChange("contact", e.target.value)
+                        }
+                        className="edit-input"
+                      />
+                    ) : (
+                      <span>{user.contact || "Not Updated"}</span>
                     )}
                   </td>
                   <td>

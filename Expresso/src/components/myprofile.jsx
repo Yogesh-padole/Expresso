@@ -22,7 +22,11 @@ export default function MyProfile() {
   const [editing, setEditing] = useState(false);
   const [reports, setReports] = useState([]);
   const [diaryEntries, setDiaryEntries] = useState([]);
-  const [newDiary, setNewDiary] = useState({ title: "", content: "", mood: "" });
+  const [newDiary, setNewDiary] = useState({
+    title: "",
+    content: "",
+    mood: "",
+  });
   const [showDiaryForm, setShowDiaryForm] = useState(false);
 
   const user = auth.currentUser;
@@ -170,12 +174,22 @@ export default function MyProfile() {
               </>
             ) : (
               <>
-                <p><b>Name:</b> {profile.name}</p>
-                <p><b>Email:</b> {user?.email}</p>
-                <p><b>Bio:</b> {profile.bio || "No bio yet."}</p>
+                <p>
+                  <b>Name:</b> {profile.name}
+                </p>
+                <p>
+                  <b>Email:</b> {user?.email}
+                </p>
+                <p>
+                  <b>Bio:</b> {profile.bio || "No bio yet."}
+                </p>
                 <div className="btn-group">
-                  <button onClick={() => setEditing(true)}>✏️ Edit Profile</button>
-                  <button onClick={() => navigate("/dashboard")}>🌍 Go to Public Posts</button>
+                  <button onClick={() => setEditing(true)}>
+                    ✏️ Edit Profile
+                  </button>
+                  <button onClick={() => navigate("/dashboard")}>
+                    🌍 Go to Public Posts
+                  </button>
                 </div>
               </>
             )}
@@ -198,18 +212,39 @@ export default function MyProfile() {
                       {r.postData.tags?.length > 0 && (
                         <p>
                           {r.postData.tags.map((tag) => (
-                            <span key={tag} className="tag">#{tag} </span>
+                            <span key={tag} className="tag">
+                              #{tag}{" "}
+                            </span>
                           ))}
                         </p>
                       )}
-                      <p><b>Reported Reason:</b> {r.reason}</p>
-                      <small>Reported At: {r.createdAt?.toDate().toLocaleString() || "Just now"}</small>
-                      <p><b>Status:</b> {r.status || "pending"}</p>
-                      <p><b>Resolved:</b> {r.resolved ? "✅ Yes" : "❌ No"}</p>
-                      {r.resolutionNote && <p><b>Resolution Note:</b> {r.resolutionNote}</p>}
-                      {r.resolvedAt && <small>Resolved At: {r.resolvedAt.toDate().toLocaleString()}</small>}
+                      <p>
+                        <b>Reported Reason:</b> {r.reason}
+                      </p>
+                      <small>
+                        Reported At:{" "}
+                        {r.createdAt?.toDate().toLocaleString() || "Just now"}
+                      </small>
+                      <p>
+                        <b>Status:</b> {r.status || "pending"}
+                      </p>
+                      <p>
+                        <b>Resolved:</b> {r.resolved ? "✅ Yes" : "❌ No"}
+                      </p>
+                      {r.resolutionNote && (
+                        <p>
+                          <b>Resolution Note:</b> {r.resolutionNote}
+                        </p>
+                      )}
+                      {r.resolvedAt && (
+                        <small>
+                          Resolved At: {r.resolvedAt.toDate().toLocaleString()}
+                        </small>
+                      )}
                     </>
-                  ) : <p>This post has been deleted.</p>}
+                  ) : (
+                    <p>This post has been deleted.</p>
+                  )}
                 </div>
               ))
             )}
@@ -220,29 +255,45 @@ export default function MyProfile() {
         {activeTab === "diary" && (
           <div className="diary-section card">
             <h3>📖 My Diary</h3>
-            <button className="add-diary-btn" onClick={() => setShowDiaryForm(true)}>➕ Add Diary</button>
+            <button
+              className="add-diary-btn"
+              onClick={() => setShowDiaryForm(true)}
+            >
+              ➕ Add Diary
+            </button>
 
             {showDiaryForm && (
               <div className="overlay">
                 <div className="diary-modal">
-                  <button className="close-btn" onClick={() => setShowDiaryForm(false)}>✖</button>
+                  <button
+                    className="close-btn"
+                    onClick={() => setShowDiaryForm(false)}
+                  >
+                    ✖
+                  </button>
                   <h3>📝 Add Diary Entry</h3>
                   <input
                     type="text"
                     placeholder="Title"
                     value={newDiary.title}
-                    onChange={(e) => setNewDiary({ ...newDiary, title: e.target.value })}
+                    onChange={(e) =>
+                      setNewDiary({ ...newDiary, title: e.target.value })
+                    }
                   />
                   <textarea
                     placeholder="Write your entry..."
                     value={newDiary.content}
-                    onChange={(e) => setNewDiary({ ...newDiary, content: e.target.value })}
+                    onChange={(e) =>
+                      setNewDiary({ ...newDiary, content: e.target.value })
+                    }
                   />
                   <input
                     type="text"
                     placeholder="Mood (Happy, Sad, etc.)"
                     value={newDiary.mood}
-                    onChange={(e) => setNewDiary({ ...newDiary, mood: e.target.value })}
+                    onChange={(e) =>
+                      setNewDiary({ ...newDiary, mood: e.target.value })
+                    }
                   />
                   <button onClick={handleAddDiary}>💾 Save Entry</button>
                 </div>
@@ -254,10 +305,16 @@ export default function MyProfile() {
             ) : (
               diaryEntries.map((entry) => (
                 <div key={entry.id} className="diary-card sub-card">
-                  <h4>{entry.title} <small>({entry.mood})</small></h4>
+                  <h4>
+                    {entry.title} <small>({entry.mood})</small>
+                  </h4>
                   <p>{entry.content}</p>
-                  <small>{entry.createdAt?.toDate().toLocaleString() || "Just now"}</small>
-                  <button onClick={() => handleDeleteDiary(entry.id)}>🗑️ Delete</button>
+                  <small>
+                    {entry.createdAt?.toDate().toLocaleString() || "Just now"}
+                  </small>
+                  <button onClick={() => handleDeleteDiary(entry.id)}>
+                    🗑️ Delete
+                  </button>
                 </div>
               ))
             )}

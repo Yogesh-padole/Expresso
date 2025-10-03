@@ -123,6 +123,7 @@ const PostManagement = () => {
         }
 
         .search-input {
+          color: #111827;
           padding: 8px 12px;
           width: 260px;
           border: 1px solid #ccc;

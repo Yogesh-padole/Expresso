@@ -8,7 +8,9 @@ import {
   deleteReport,
   deleteAllCompletedReports,
   getAllUsers,
+  db,
 } from "../../utils/firestoreHelpers";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const ReportsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -88,17 +90,27 @@ const ReportsManagement = () => {
 
       for (const [postId, count] of Object.entries(reportCounts)) {
         // Skip if we've already processed this post
-        console.log(`Outside if of Report : ${postId}`);
-        console.dir(processedPosts);
-
         if (processedPosts.has(postId)) {
-          console.log(`Inside if of Report : ${postId}`);
-          break;
+          continue;
         }
 
-        // Check if post exceeds threshold and hasn't been processed
+        // Query reports for this postId
+        const reportsSnapshot = await getDocs(
+          query(collection(db, "reports"), where("postId", "==", postId))
+        );
+
+        // Check if all reports are resolved
+        const allResolved = reportsSnapshot.docs.every(
+          (doc) => doc.data().resolved === true
+        );
+
+        // If all reports are resolved, skip this post
+        if (allResolved) {
+          continue;
+        }
+
+        // Check if post exceeds threshold
         if (count === REPORT_THRESHOLD) {
-          // Mark this post as processed immediately to prevent duplicate dialogs
           processedPosts.add(postId);
 
           if (
@@ -122,9 +134,7 @@ const ReportsManagement = () => {
       }
     };
 
-    if (Object.keys(reportCounts).length > 0) {
-      checkAndDeletePosts();
-    }
+    checkAndDeletePosts();
   }, [reportCounts]);
 
   // Filter reports based on tab and search term
@@ -464,7 +474,7 @@ const ReportsManagement = () => {
                     <p>
                       <strong>Content:</strong>
                     </p>
-                    <div className="Adpost-content">{postDetails.content}</div>
+                    <div className="post-content">{postDetails.content}</div>
                   </div>
 
                   <div className="report-section">
