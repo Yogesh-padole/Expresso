@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Search, Edit, Eye, Trash2 } from "lucide-react";
 import { getAllPosts, deletePost } from "../../services/postService";
 import {
@@ -83,38 +83,25 @@ const ReportsManagement = () => {
   // Check and auto-delete posts exceeding threshold
   useEffect(() => {
     const checkAndDeletePosts = async () => {
-      const processedPosts = new Set(); // Track processed posts
-
       for (const [postId, count] of Object.entries(reportCounts)) {
-        // Skip if we've already processed this post
-        console.log(`Outside if of Report : ${postId}`);
-        console.dir(processedPosts);
-
-        if (processedPosts.has(postId)) {
-          console.log(`Inside if of Report : ${postId}`);
-          break;
+        if (processedPostsRef.current.has(postId)) {
+          continue; // ✅ fixed
         }
 
-        // Check if post exceeds threshold and hasn't been processed
-        if (count === REPORT_THRESHOLD) {
-          // Mark this post as processed immediately to prevent duplicate dialogs
-          processedPosts.add(postId);
+        if (count >= REPORT_THRESHOLD) {
+          processedPostsRef.current.add(postId);
 
-          if (
-            window.confirm(
-              `Permanently delete reported post? This post has been reported ${count} times (exceeds threshold of ${REPORT_THRESHOLD})`,
-            )
-          ) {
+          const confirmDelete = window.confirm(
+            `Delete post? It has ${count} reports`,
+          );
+
+          if (confirmDelete) {
             try {
-              console.log(`Auto-deleting post ${postId} with ${count} reports`);
               await deletePost(postId);
-
-              // Update reports status after auto-deletion
               await resolveReportsForPost(postId);
-
-              alert("Reported Post deleted successfully!");
+              alert("Post deleted successfully!");
             } catch (error) {
-              console.error(`Error auto-deleting post ${postId}:`, error);
+              console.error(error);
             }
           }
         }
