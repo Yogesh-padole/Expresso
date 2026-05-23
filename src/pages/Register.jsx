@@ -14,11 +14,17 @@ import {
 } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
 import { toast } from "sonner";
+import {
+  getAuth,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+} from "firebase/auth";
 
 // ✅ Service
 import { registerUser, checkContactExists } from "../services/authService";
 
 const Register = () => {
+  const auth = getAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState(""); // username
@@ -31,8 +37,92 @@ const Register = () => {
   // const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  //Phone OTP Verification states
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
+  const [showOtpField, setShowOtpField] = useState(false);
+
+  const [confirmationResult, setConfirmationResult] = useState(null);
+
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  const verifyOtp = async () => {
+    try {
+      if (!phoneOtp) {
+        return toast.error("Enter OTP");
+      }
+
+      if (!confirmationResult) {
+        return toast.error("Send OTP first");
+      }
+
+      await confirmationResult.confirm(phoneOtp);
+
+      setPhoneVerified(true);
+
+      // Remove temporary phone auth session
+      await auth.signOut();
+
+      toast.success("Phone verified successfully");
+    } catch (error) {
+      toast.error("Invalid OTP");
+    }
+  };
+
+  const sendPhoneOtp = async () => {
+    try {
+      if (!/^[6-9]\d{9}$/.test(contact)) {
+        return toast.error("Invalid contact number");
+      }
+
+      const exists = await checkContactExists(contact);
+
+      if (!exists) {
+        setOtpLoading(false);
+        return;
+      }
+
+      setOtpLoading(true);
+
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(
+          auth,
+          "recaptcha-container",
+          {
+            size: "invisible",
+          },
+        );
+      }
+
+      const appVerifier = window.recaptchaVerifier;
+
+      const result = await signInWithPhoneNumber(
+        auth,
+        `+91${contact}`,
+        appVerifier,
+      );
+
+      setConfirmationResult(result);
+
+      setShowOtpField(true);
+
+      toast.success("OTP sent successfully");
+    } catch (error) {
+      console.log(error);
+
+      toast.error(error.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // if (!phoneVerified) {
+    //   return toast.error("Please verify phone number");
+    // }
 
     if (password !== confirmPassword) {
       return toast.error("Passwords do not match");
@@ -104,12 +194,52 @@ const Register = () => {
 
               <div>
                 <Label>Contact</Label>
-                <Input
-                  type="contact"
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                />
+
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={contact}
+                    onChange={(e) => {
+                      setContact(e.target.value);
+
+                      // setPhoneVerified(false);
+
+                      // setShowOtpField(false);
+
+                      // setPhoneOtp("");
+                    }}
+                    // disabled={phoneVerified}
+                  />
+                </div>
               </div>
+
+              {/* <Button
+                    type="button"
+                    onClick={sendPhoneOtp}
+                    disabled={phoneVerified || otpLoading || showOtpField}
+                  >
+                    {phoneVerified
+                      ? "Verified"
+                      : otpLoading
+                        ? "Sending..."
+                        : "Verify"}
+                  </Button>
+                </div>
+
+                {showOtpField && !phoneVerified && (
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Enter OTP"
+                      value={phoneOtp}
+                      onChange={(e) => setPhoneOtp(e.target.value)}
+                    />
+
+                    <Button type="button" onClick={verifyOtp}>
+                      Submit OTP
+                    </Button>
+                  </div>
+                )}
+              </div> */}
 
               <div className="space-y-2">
                 <div className="relative">
@@ -172,6 +302,7 @@ const Register = () => {
           </form>
         </Card>
       </div>
+      <div id="recaptcha-container"></div>
     </div>
   );
 };

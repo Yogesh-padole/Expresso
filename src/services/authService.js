@@ -7,6 +7,8 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
 } from "firebase/auth";
 import { toast } from "sonner";
 
