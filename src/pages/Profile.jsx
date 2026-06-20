@@ -4,8 +4,6 @@ import {
   ArrowLeft,
   Coffee,
   FileText,
-  Heart,
-  MessageCircle,
   Plus,
   BookOpen,
   Pencil,
@@ -238,17 +236,14 @@ const Profile = () => {
                 value: userPosts.length,
               },
               {
-                icon: Heart,
-                label: "Likes",
-                value: userPosts.reduce((acc, p) => acc + p.likes, 0),
+                icon: AlertTriangle,
+                label: "Reports",
+                value: reports.length,
               },
               {
-                icon: MessageCircle,
-                label: "Comments",
-                value: userPosts.reduce(
-                  (acc, p) => acc + (p.comments?.length || 0),
-                  0,
-                ),
+                icon: BookOpen,
+                label: "Diaries",
+                value: diaryEntries.length,
               },
             ].map((stat) => (
               <div key={stat.label} className="text-center">

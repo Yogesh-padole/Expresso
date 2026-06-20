@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Activity, Users, FileText } from "lucide-react";
+import {
+  Activity,
+  Users,
+  FileText,
+  MessageSquare,
+  ClipboardList,
+  BarChart3,
+} from "lucide-react";
 import Dashboard from "../components/Dashboard";
 import UserManagement from "../components/UserManagement";
 import ReportsManagement from "../components/ReportsManagement";
@@ -124,7 +131,7 @@ const AdminPanel = () => {
               className={activeTab === "feed" ? "nav-btn active" : "nav-btn"}
               onClick={() => setActiveTab("feed")}
             >
-              <FileText size={20} />
+              <MessageSquare size={20} />
               Feedback
             </button>
 
@@ -134,7 +141,7 @@ const AdminPanel = () => {
               }
               onClick={() => setActiveTab("postmanage")}
             >
-              <FileText size={20} />
+              <ClipboardList size={20} />
               Manage Posts
             </button>
 
@@ -144,7 +151,7 @@ const AdminPanel = () => {
               }
               onClick={() => setActiveTab("analytics")}
             >
-              <FileText size={20} />
+              <BarChart3 size={20} />
               Analytics
             </button>
           </div>
