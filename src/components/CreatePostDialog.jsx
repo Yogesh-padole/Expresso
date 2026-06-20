@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Ghost, X, Plus } from "lucide-react";
 import {
   Dialog,
@@ -25,7 +25,7 @@ const categories = [
   "vulnerability",
   "forgiveness",
 ];
-const CreatePostDialog = ({ open, onOpenChange, onPost }) => {
+const CreatePostDialog = ({ open, onOpenChange, editingPost, onPost }) => {
   const user = auth.currentUser;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -58,32 +58,67 @@ const CreatePostDialog = ({ open, onOpenChange, onPost }) => {
       setCustomTag("");
     }
   };
+
+  useEffect(() => {
+    if (!open) {
+      setTitle("");
+      setContent("");
+      setSelectedTags([]);
+      setIsAnonymous(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (editingPost && open) {
+      setTitle(editingPost.title || "");
+      setContent(editingPost.content || "");
+      setSelectedTags(editingPost.tags || []);
+      setIsAnonymous(editingPost.isAnonymous || false);
+    }
+  }, [editingPost, open]);
+
   const handleSubmit = () => {
     if (!isValid) return;
-    const newPost = {
-      author: isAnonymous ? "Anonymous" : user.displayName || user.email,
-      title,
-      content,
-      tags: selectedTags,
-      likes: 0,
-      liked: false,
-      saved: false,
-      commentCount: 0,
-      isAnonymous,
-    };
-    onPost(newPost);
+
+    if (editingPost) {
+      onPost({
+        ...editingPost,
+        title,
+        content,
+        tags: selectedTags,
+        isAnonymous,
+        author: isAnonymous ? "Anonymous" : user.displayName || user.email,
+      });
+    } else {
+      onPost({
+        author: isAnonymous ? "Anonymous" : user.displayName || user.email,
+        title,
+        content,
+        tags: selectedTags,
+        likes: 0,
+        liked: false,
+        likedBy: [],
+        saved: false,
+        savedBy: [],
+        comments: [],
+        commentCount: 0,
+        isAnonymous,
+      });
+    }
+
     setTitle("");
     setContent("");
     setSelectedTags([]);
     setIsAnonymous(false);
+
     onOpenChange(false);
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg bg-card border rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl text-foreground">
-            Create a Post
+          <DialogTitle>
+            {editingPost ? "Edit Post" : "Create a Post"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
             Share your thoughts, experiences, or lessons learned.
@@ -198,9 +233,11 @@ const CreatePostDialog = ({ open, onOpenChange, onPost }) => {
             disabled={!isValid}
             className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground press-scale hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isAnonymous
-              ? "\u{1F47B} Post Anonymously"
-              : "\u2615 Share Your Story"}
+            {editingPost
+              ? "✏️ Update Post"
+              : isAnonymous
+                ? "👻 Post Anonymously"
+                : "☕ Share Your Story"}
           </button>
         </div>
       </DialogContent>

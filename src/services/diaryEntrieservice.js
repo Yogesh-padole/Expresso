@@ -15,7 +15,7 @@ import { db } from "../firebase/firebase";
 export const creatediaryEntries = async (data, userId) => {
   return await addDoc(collection(db, "diaryEntries"), {
     ...data,
-    userId: user.uid,
+    userId,
     createdAt: data.createdAt?.toDate
       ? data.createdAt.toDate().toLocaleString()
       : null,
@@ -29,15 +29,13 @@ export const getUserdiaryEntries = async (userId) => {
     orderBy("createdAt", "desc"),
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d) => ({ ...d.data(), docId: d.id }));
 };
 
 export const updatediaryEntries = async (id, updates) => {
   await updateDoc(doc(db, "diaryEntries", id), {
     ...updates,
-    updatedAt: data.createdAt?.toDate
-      ? data.createdAt.toDate().toLocaleString()
-      : null,
+    updatedAt: new Date().toLocaleString(),
   });
 };
 

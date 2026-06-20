@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -13,25 +13,38 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 
-const DiaryModal = ({ open, onOpenChange, onSave }) => {
+const DiaryModal = ({ open, onOpenChange, onSave, editingEntry }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
   const isValid = title.trim().length > 0 && content.trim().length > 0;
 
+  useEffect(() => {
+    console.log(editingEntry);
+    if (editingEntry) {
+      setTitle(editingEntry.title || "");
+      setContent(editingEntry.content || "");
+    } else {
+      setTitle("");
+      setContent("");
+    }
+  }, [editingEntry, open]);
+
   const handleSubmit = () => {
     if (!isValid) return;
+
     onSave({
-      id: `d${Date.now()}`,
       title: title.trim(),
       content: content.trim(),
-      date: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
+      date:
+        editingEntry?.date ||
+        new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
     });
-    toast.success("Diary entry saved ✨");
+
     setTitle("");
     setContent("");
     onOpenChange(false);
@@ -43,7 +56,7 @@ const DiaryModal = ({ open, onOpenChange, onSave }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-serif text-xl">
             <BookOpen className="h-5 w-5 text-primary" />
-            New Diary Entry
+            {editingEntry ? "Edit Diary Entry" : "New Diary Entry"}
           </DialogTitle>
           <DialogDescription>
             Write down your thoughts privately.
@@ -74,7 +87,7 @@ const DiaryModal = ({ open, onOpenChange, onSave }) => {
             Cancel
           </Button>
           <Button disabled={!isValid} onClick={handleSubmit}>
-            Save Entry
+            {editingEntry ? "Update Entry" : "Save Entry"}
           </Button>
         </DialogFooter>
       </DialogContent>

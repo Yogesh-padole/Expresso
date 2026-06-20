@@ -27,7 +27,7 @@ const formatDate = (timestamp) => {
   return "";
 };
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, isDetailView = false }) => {
   const toggleLike = () => {
     setLiked(!liked);
     setLikes((prev) => (liked ? prev - 1 : prev + 1));
@@ -85,11 +85,17 @@ const PostCard = ({ post }) => {
       )}
 
       {/* Content */}
-      <Link to={`/post/${post.id}`}>
+      {isDetailView ? (
         <p className="text-foreground leading-relaxed mb-4 break-words whitespace-pre-wrap">
           {post.content}
         </p>
-      </Link>
+      ) : (
+        <Link to={`/post/${post.id}`}>
+          <p className="text-foreground leading-relaxed mb-4 break-words whitespace-pre-wrap">
+            {post.content}
+          </p>
+        </Link>
+      )}
 
       {/* Actions */}
       <div>

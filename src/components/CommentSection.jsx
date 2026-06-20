@@ -7,7 +7,6 @@ import {
   ChevronDown,
   Send,
 } from "lucide-react";
-import { mockComments } from "../data/mockData";
 import {
   collection,
   addDoc,

@@ -80,52 +80,6 @@ const ReportsManagement = () => {
     setReportCounts(counts);
   };
 
-  // Check and auto-delete posts exceeding threshold
-  useEffect(() => {
-    const checkAndDeletePosts = async () => {
-      const processedPosts = new Set(); // Track processed posts
-
-      for (const [postId, count] of Object.entries(reportCounts)) {
-        // Skip if we've already processed this post
-        console.log(`Outside if of Report : ${postId}`);
-        console.dir(processedPosts);
-
-        if (processedPosts.has(postId)) {
-          console.log(`Inside if of Report : ${postId}`);
-          break;
-        }
-
-        // Check if post exceeds threshold and hasn't been processed
-        if (count === REPORT_THRESHOLD) {
-          // Mark this post as processed immediately to prevent duplicate dialogs
-          processedPosts.add(postId);
-
-          if (
-            window.confirm(
-              `Permanently delete reported post? This post has been reported ${count} times (exceeds threshold of ${REPORT_THRESHOLD})`,
-            )
-          ) {
-            try {
-              console.log(`Auto-deleting post ${postId} with ${count} reports`);
-              await deletePost(postId);
-
-              // Update reports status after auto-deletion
-              await resolveReportsForPost(postId);
-
-              alert("Reported Post deleted successfully!");
-            } catch (error) {
-              console.error(`Error auto-deleting post ${postId}:`, error);
-            }
-          }
-        }
-      }
-    };
-
-    if (Object.keys(reportCounts).length > 0) {
-      checkAndDeletePosts();
-    }
-  }, [reportCounts]);
-
   // Filter reports based on tab and search term
   useEffect(() => {
     if (!reports.length) return;
@@ -137,6 +91,23 @@ const ReportsManagement = () => {
       filtered = filtered.filter((report) => !report.resolved);
     } else if (activeReportsTab === "completed") {
       filtered = filtered.filter((report) => report.resolved);
+    } else if (activeReportsTab === "threshold") {
+      filtered = filtered.filter(
+        (report) => reportCounts[report.postId] >= REPORT_THRESHOLD,
+      );
+
+      // Remove duplicate rows for same post
+      const thresholdReports = [];
+      const seenPosts = new Set();
+
+      filtered.forEach((report) => {
+        if (!seenPosts.has(report.postId)) {
+          seenPosts.add(report.postId);
+          thresholdReports.push(report);
+        }
+      });
+
+      filtered = thresholdReports;
     }
     // "recent" tab shows all reports (no filter)
 
@@ -265,6 +236,51 @@ const ReportsManagement = () => {
     }
   };
 
+  const handleDeleteAllThresholdPosts = async () => {
+    const thresholdPosts = Object.entries(reportCounts).filter(
+      ([_, count]) => count >= REPORT_THRESHOLD,
+    );
+
+    if (thresholdPosts.length === 0) {
+      alert("No threshold-hit posts found.");
+      return;
+    }
+
+    if (
+      !window.confirm(`Delete ${thresholdPosts.length} threshold-hit posts?`)
+    ) {
+      return;
+    }
+
+    try {
+      for (const [postId] of thresholdPosts) {
+        await deletePost(postId);
+        await resolveReportsForPost(postId);
+      }
+
+      alert(`${thresholdPosts.length} posts deleted successfully!`);
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting threshold-hit posts.");
+    }
+  };
+
+  const handleDeleteThresholdPost = async (postId) => {
+    if (!window.confirm("Delete this threshold-hit post?")) {
+      return;
+    }
+
+    try {
+      await deletePost(postId);
+      await resolveReportsForPost(postId);
+
+      alert("Post deleted successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting post.");
+    }
+  };
+
   const handleSendWarning = () => {
     if (!selectedReport) return;
 
@@ -334,6 +350,14 @@ const ReportsManagement = () => {
         >
           Completed Reports
         </button>
+        <button
+          className={
+            activeReportsTab === "threshold" ? "tab-btn active" : "tab-btn"
+          }
+          onClick={() => setActiveReportsTab("threshold")}
+        >
+          Threshold Hit Reports
+        </button>
       </div>
 
       {/* Delete All Completed Reports Button - Only show in Completed tab */}
@@ -350,6 +374,24 @@ const ReportsManagement = () => {
         </div>
       )}
 
+      {/* Delete All Threshold Posts */}
+      {activeReportsTab === "threshold" && (
+        <div className="bulk-actions">
+          <button
+            className="btn btn-danger bulk-delete-btn"
+            onClick={handleDeleteAllThresholdPosts}
+            disabled={
+              Object.values(reportCounts).filter(
+                (count) => count >= REPORT_THRESHOLD,
+              ).length === 0
+            }
+          >
+            <Trash2 size={16} />
+            Delete All Threshold Posts
+          </button>
+        </div>
+      )}
+
       <div className="search-bar">
         <Search size={20} />
         <input
@@ -362,8 +404,26 @@ const ReportsManagement = () => {
 
       <div className="table-container">
         {filteredReports.length === 0 ? (
-          <div className="no-results">
-            No reports found {searchTerm ? `for "${searchTerm}"` : ""}
+          <div className="empty-state">
+            <div className="empty-state-icon">📋</div>
+
+            <h3>
+              {activeReportsTab === "threshold"
+                ? "No Threshold Hit Reports"
+                : "No Reports Found"}
+            </h3>
+
+            <p>
+              {searchTerm
+                ? `No reports match "${searchTerm}"`
+                : activeReportsTab === "pending"
+                  ? "There are no pending reports to review."
+                  : activeReportsTab === "completed"
+                    ? "There are no completed reports."
+                    : activeReportsTab === "threshold"
+                      ? `No posts have reached the report threshold (${REPORT_THRESHOLD}).`
+                      : "Everything looks clean right now."}
+            </p>
           </div>
         ) : (
           <table className="reports-table">
@@ -409,8 +469,20 @@ const ReportsManagement = () => {
                     >
                       <Eye size={14} /> View
                     </button>
-                    {/* Show delete button only for completed reports */}
-                    {report.resolved && (
+                    {/* Threshold Tab Delete Post */}
+                    {activeReportsTab === "threshold" && (
+                      <button
+                        className="action-btn delete"
+                        onClick={() => handleDeleteThresholdPost(report.postId)}
+                        title="Delete Post"
+                      >
+                        <Trash2 size={14} />
+                        Delete Post
+                      </button>
+                    )}
+
+                    {/* Completed Reports Delete */}
+                    {report.resolved && activeReportsTab !== "threshold" && (
                       <button
                         className="action-btn delete"
                         onClick={() => handleDeleteReport(report.id)}

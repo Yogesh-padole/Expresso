@@ -20,7 +20,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="nav-container">
         {/* Left side - Empty for balance */}
-        <div style={{ width: "100px" }}></div>
+        <div className="nav-spacer"></div>
 
         {/* Center - Logo */}
         <div className="nav-logo">Expresso</div>

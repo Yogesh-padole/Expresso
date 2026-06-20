@@ -16,7 +16,7 @@ export default function CommentButton({ postId }) {
 
     // ensure it's a string (Firestore expects string id)
     const postIdStr = String(postId);
-    console.log("CommentButton listening for postId:", postIdStr);
+    // console.log("CommentButton listening for postId:", postIdStr);
 
     const commentsRef = collection(db, "posts", postIdStr, "comments");
 
