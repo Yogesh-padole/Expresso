@@ -36,6 +36,9 @@ import {
   subscribeToSize,
 } from "../utils/firestoreHelpers";
 
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
+
 const LoadingSpinner = ({ size = "medium", className = "" }) => {
   return (
     <div className={`loading-spinner ${className}`}>
@@ -365,6 +368,7 @@ const AnalyticsTab = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPosts, setTotalPosts] = useState(0);
   const [totalPendingReports, setTotalPendingReports] = useState(0);
+  const [dailyPosts, setDailyPosts] = useState(0);
 
   //For Dynamic
   //   useEffect(() => {
@@ -450,22 +454,42 @@ const AnalyticsTab = () => {
 
   useEffect(() => {
     const unsubUsers = subscribeToSize("users", (size) =>
-      setTotalUsers(size || 2847),
+      setTotalUsers(size || 0),
     );
 
     const unsubPosts = subscribeToSize("posts", (size) =>
-      setTotalPosts(size || 1256),
+      setTotalPosts(size || 0),
     );
 
     const unsubReports = subscribeToPendingReportSize("reports", (size) =>
       setTotalPendingReports(size),
     );
 
-    // Cleanup listeners on unmount
+    const unsubDailyPosts = onSnapshot(collection(db, "posts"), (snapshot) => {
+      const today = new Date();
+
+      const count = snapshot.docs.filter((doc) => {
+        const data = doc.data();
+
+        if (!data.createdAt) return false;
+
+        const postDate = data.createdAt.toDate();
+
+        return (
+          postDate.getDate() === today.getDate() &&
+          postDate.getMonth() === today.getMonth() &&
+          postDate.getFullYear() === today.getFullYear()
+        );
+      }).length;
+
+      setDailyPosts(count);
+    });
+
     return () => {
       unsubUsers();
       unsubPosts();
       unsubReports();
+      unsubDailyPosts();
     };
   }, []);
 
@@ -644,7 +668,7 @@ const AnalyticsTab = () => {
                   <div className="performance-stat-icon green">
                     <BarChart3 size={24} style={{ color: "white" }} />
                   </div>
-                  <p className="performance-stat-value">127</p>
+                  <p className="performance-stat-value">{dailyPosts}</p>
                   <p className="performance-stat-label">Daily Posts</p>
                 </div>
 

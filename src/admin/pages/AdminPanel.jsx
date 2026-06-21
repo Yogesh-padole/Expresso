@@ -124,7 +124,7 @@ const AdminPanel = () => {
               onClick={() => setActiveTab("reports")}
             >
               <FileText size={20} />
-              Reports
+              User Reports
             </button>
 
             <button
