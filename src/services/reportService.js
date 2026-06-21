@@ -38,10 +38,10 @@ const mapReport = (doc) => {
 export const createReport = async (data) => {
   return await addDoc(collection(db, "reports"), {
     ...data,
-    createdAt: data.createdAt?.toDate
-      ? data.createdAt.toDate().toLocaleString()
-      : null,
+    createdAt: serverTimestamp(),
     resolved: false,
+    resolvedAt: null,
+    resolutionNote: null,
   });
 };
 
@@ -78,9 +78,8 @@ export const subscribeToReports = (callback) => {
 export const resolveReport = async (id) => {
   await updateDoc(doc(db, "reports", id), {
     resolved: true,
-    resolvedAt: data.createdAt?.toDate
-      ? data.createdAt.toDate().toLocaleString()
-      : null,
+    status: "completed",
+    resolvedAt: serverTimestamp(),
   });
 };
 
@@ -95,9 +94,7 @@ export const resolveReportsForPost = async (postId) => {
       await updateDoc(reportRef, {
         status: "completed",
         resolved: true,
-        resolvedAt: data.createdAt?.toDate
-          ? data.createdAt.toDate().toLocaleString()
-          : null,
+        resolvedAt: serverTimestamp(),
         resolutionNote: "Post was deleted",
       });
     });

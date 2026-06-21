@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Search, Edit, Eye, Trash2 } from "lucide-react";
-import { getAllPosts, deletePost } from "../../services/postService";
+import {
+  getAllPosts,
+  deletePost,
+  getPostById,
+} from "../../services/postService";
 import {
   subscribeToReports,
   resolveReportsForPost,
@@ -135,15 +139,17 @@ const ReportsManagement = () => {
   const fetchPostDetails = async (postId) => {
     try {
       // Try to get post from posts collection first
-      const posts = await getAllPosts();
-      const post = posts.find((p) => p.id === postId);
+      // const posts = await getAllPosts();
+      // const post = posts.find((p) => p.id === postId);
+
+      const post = await getPostById(postId);
 
       if (post) {
         setPostDetails({
           id: post.id,
           title: post.title,
           content: post.body || post.content,
-          author: post.authorName || post.author,
+          author: post.authorName || post.author.name,
           createdAt: post.createdAt,
         });
         return true;

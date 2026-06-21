@@ -25,7 +25,10 @@ const mapUser = (doc) => {
     role: data.role || "User",
     status: data.status || "Active",
 
-    // 🎨 Avatar (auto generate)
+    // ✅ Add these
+    savedPosts: data.savedPosts || [],
+    postsCount: data.postsCount || [],
+
     avatar:
       "https://ui-avatars.com/api/?name=" +
       encodeURIComponent(data.name || data.username || "User"),

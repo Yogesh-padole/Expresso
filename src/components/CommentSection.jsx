@@ -6,6 +6,7 @@ import {
   Ghost,
   ChevronDown,
   Send,
+  Trash2,
 } from "lucide-react";
 import {
   collection,
@@ -19,7 +20,7 @@ import {
 import { timeAgo } from "../utils/timeAgo";
 import { db, auth } from "../firebase/firebase";
 import ReportDialog from "../components/ReportDialog";
-const CommentItem = ({ comment, postId, depth = 0 }) => {
+const CommentItem = ({ comment, postId, depth = 0, currentUserId }) => {
   const [liked, setLiked] = useState(comment.liked);
   const [likes, setLikes] = useState(comment.likes);
   const [showReplies, setShowReplies] = useState(depth === 0);
@@ -44,6 +45,21 @@ const CommentItem = ({ comment, postId, depth = 0 }) => {
     setReplyText("");
     setReplying(false);
   };
+
+  const handleDeleteComment = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this comment?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteDoc(doc(db, "posts", postId, "comments", comment.id));
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
   return (
     <div className={`${depth > 0 ? "ml-6 pl-4 border-l-2 border-border" : ""}`}>
       <div className="py-3">
@@ -79,6 +95,15 @@ const CommentItem = ({ comment, postId, depth = 0 }) => {
                 <MessageCircle className="h-3.5 w-3.5" />
                 Reply
               </button>
+              {comment.authorId === currentUserId && (
+                <button
+                  onClick={handleDeleteComment}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </button>
+              )}
               <ReportDialog
                 type="comment"
                 trigger={
@@ -128,6 +153,7 @@ const CommentItem = ({ comment, postId, depth = 0 }) => {
                 comment={reply}
                 postId={postId}
                 depth={depth + 1}
+                currentUserId={currentUserId}
               />
             ))}
         </>
@@ -138,6 +164,7 @@ const CommentItem = ({ comment, postId, depth = 0 }) => {
 const CommentSection = ({ postId }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  const currentUserId = auth.currentUser?.uid;
 
   // 🔹 Listen to comments + replies
   useEffect(() => {
@@ -288,7 +315,12 @@ const CommentSection = ({ postId }) => {
       {/* Comments List */}
       <div className="space-y-1 divide-y divide-border">
         {sortedComments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} postId={postId} />
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            postId={postId}
+            currentUserId={currentUserId}
+          />
         ))}
       </div>
     </div>
