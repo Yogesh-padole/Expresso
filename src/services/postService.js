@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   arrayUnion,
   getDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { getLogUser } from "../services/userService";
 import { db } from "../firebase/firebase";
@@ -20,6 +21,8 @@ import { db } from "../firebase/firebase";
 //
 const mapPost = (docSnap, currentUserId = null, userData = {}) => {
   const data = docSnap.data();
+
+  const savedBy = Array.isArray(data.savedBy) ? data.savedBy : [];
 
   return {
     id: docSnap.id,
@@ -43,6 +46,8 @@ const mapPost = (docSnap, currentUserId = null, userData = {}) => {
 
     likes: Object.keys(data.likes || {}).length,
     likedByUser: currentUserId ? !!data.likes?.[currentUserId] : false,
+
+    saved: currentUserId ? savedBy.includes(currentUserId) : false,
 
     comments: data.comments || [],
   };
@@ -116,15 +121,15 @@ export const getPostById = async (postId, currentUserId = null) => {
 
     let userData = {};
 
-    if (data.authorId) {
+    if (data.currentUserId) {
       try {
-        userData = await getLogUser(data.authorId);
+        userData = await getLogUser(data.currentUserId);
       } catch {
         userData = {};
       }
     }
 
-    return mapPost(postSnap, data.authorId, userData);
+    return mapPost(postSnap, data.currentUserId, userData);
   } catch (error) {
     console.error("Error fetching post:", error);
     throw error;
@@ -157,6 +162,15 @@ export const getPostsByUser = async (userId) => {
     console.error("Error fetching user posts:", error);
     throw error;
   }
+};
+
+export const subscribeToPosts = (userId, callback) => {
+  const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+
+  return onSnapshot(q, async () => {
+    const posts = await getAllPosts(userId);
+    callback(posts);
+  });
 };
 
 //

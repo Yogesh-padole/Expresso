@@ -12,24 +12,21 @@ export default function Reaction({ postId }) {
     <div className="flex items-center gap-4 pt-2 border-t border-border">
       {/* Like */}
       <LikeButton postId={postId} />
-
       {/* Comment */}
       <CommentButton postId={postId} />
-
       {/* Save */}
       <SaveButton postId={postId} />
-
       {/* Share */}
       <ShareButton postId={postId} />
-
       {/* Report */}
       <ReportDialog
         type="post"
         trigger={
-          <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors press-scale">
+          <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive transition-colors">
             <AlertTriangle className="h-4 w-4" />
           </button>
         }
+        postId={postId}
       />
     </div>
   );

@@ -9,19 +9,74 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../components/ui/dialog";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import { db } from "../firebase/firebase";
+import { createReport } from "../services/reportService";
+import { auth } from "../firebase/firebase";
 import { Button } from "../components/ui/button";
 
 const reasons = ["Spam", "Abuse", "Harassment", "Other"];
 
-const ReportDialog = ({ type = "post", trigger }) => {
+const ReportDialog = ({ type = "post", trigger, postId }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selected) return;
-    setOpen(false);
-    setSelected(null);
-    toast.success("Report submitted successfully");
+
+    try {
+      const postRef = doc(db, "posts", postId);
+      const postSnap = await getDoc(postRef);
+
+      const postTitle = postSnap.exists()
+        ? postSnap.data().title
+        : "Unknown Post";
+
+      const existingQuery = query(
+        collection(db, "reports"),
+        where("postId", "==", postId),
+        where("reportedBy", "==", auth.currentUser.uid),
+      );
+
+      const existingSnap = await getDocs(existingQuery);
+
+      if (!existingSnap.empty) {
+        toast.error("You have already reported this post");
+        return;
+      }
+
+      const postData = postSnap.exists() ? postSnap.data() : {};
+
+      await createReport({
+        postId,
+
+        postTitle: postData.title || "Untitled Post",
+        postAuthor: postData.author || "Unknown",
+        postAuthorId: postData.authorId || null,
+
+        reason: selected,
+
+        reportedBy: auth.currentUser?.uid,
+        reportedByEmail: auth.currentUser?.email,
+
+        status: "pending",
+      });
+
+      toast.success("Report submitted successfully");
+
+      setOpen(false);
+      setSelected(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to submit report");
+    }
   };
 
   return (
