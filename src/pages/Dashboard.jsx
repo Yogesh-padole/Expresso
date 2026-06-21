@@ -9,7 +9,6 @@ import {
   Plus,
   Coffee,
   Ghost,
-  Bell,
   Heart,
   MessageCircle,
   UserPlus,
@@ -17,21 +16,27 @@ import {
   LogOut,
   MessageSquare,
 } from "lucide-react";
+import {
+  doc,
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
+import { db } from "../firebase/firebase";
 import PostCard from "../components/PostCard";
 import CreatePostDialog from "../components/CreatePostDialog";
 import FeedbackDialog from "../components/FeedbackDialog";
-import { trendingTags, mockNotifications, currentUser } from "../data/mockData";
+import { trendingTags } from "../data/mockData";
 import { User } from "lucide-react";
 
 // Services
-import { getAllPosts, createPost } from "../services/postService";
-import { logoutUser } from "../services/authService";
-import { getLogUser } from "../services/userService";
 import {
-  togglePostLike,
-  addComment,
-  toggleSavePost,
-} from "../services/interactionService";
+  getAllPosts,
+  createPost,
+  subscribeToPosts,
+} from "../services/postService";
+import { logoutUser } from "../services/authService";
 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
@@ -98,19 +103,32 @@ const Dashboard = () => {
   const [createOpen, setCreateOpen] = useState(false);
 
   // ✅ LOAD USER + POSTS
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeUser = null;
+    let unsubscribePosts = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         navigate("/login");
         return;
       }
 
       try {
-        const userData = await getLogUser(firebaseUser.uid);
-        setUser({ ...userData, uid: firebaseUser.uid });
+        // ✅ Realtime user listener
+        const userRef = doc(db, "users", firebaseUser.uid);
 
-        const allPosts = await getAllPosts();
-        setPosts(allPosts);
+        unsubscribeUser = onSnapshot(userRef, (snap) => {
+          if (snap.exists()) {
+            setUser({
+              ...snap.data(),
+              uid: firebaseUser.uid,
+            });
+          }
+        });
+
+        // ✅ Realtime posts listener
+        unsubscribePosts = subscribeToPosts(firebaseUser.uid, setPosts);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load dashboard");
@@ -119,8 +137,18 @@ const Dashboard = () => {
       }
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribeAuth();
+
+      if (unsubscribeUser) {
+        unsubscribeUser();
+      }
+
+      if (unsubscribePosts) {
+        unsubscribePosts();
+      }
+    };
+  }, [auth, navigate]);
 
   const filteredPosts = useMemo(() => {
     let result = [...posts];
@@ -129,12 +157,10 @@ const Dashboard = () => {
         result = result.sort((a, b) => b.likes - a.likes);
         break;
       case "My Posts":
-        result = result.filter(
-          (p) => p.author?.name !== "Anonymous" && p.author?.id === user?.uid,
-        );
+        result = result.filter((p) => p.author?.id === user?.uid);
         break;
       case "Saved":
-        result = result.filter((p) => p.saved);
+        result = result.filter((p) => user?.savedPosts?.includes(p.id));
         break;
       case "Explore":
         result = result.sort(() => Math.random() - 0.5);
@@ -156,7 +182,7 @@ const Dashboard = () => {
 
       setPosts((prev) => [post, ...prev]);
 
-      const updatedPosts = await getAllPosts();
+      const updatedPosts = await getAllPosts(user.uid);
       setPosts(updatedPosts);
     } catch (err) {
       toast.error("Failed to create post");
