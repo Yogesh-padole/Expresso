@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/firebase"; // adjust import
+import { Download } from "lucide-react";
 
 const PostManagement = () => {
   const [postData, setPostData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -24,8 +27,13 @@ const PostManagement = () => {
           }
 
           postArr.push({
+            id: doc.id,
             date: postDate,
             email: post.author || "N/A",
+            title: post.title || "Untitled",
+            content: post.content || "",
+            likes: post.likes || 0,
+            comments: post.comments?.length || 0,
           });
         });
 
@@ -55,31 +63,135 @@ const PostManagement = () => {
     fetchPosts();
   }, []);
 
+  const totalPosts = postData.reduce((sum, item) => sum + item.count, 0);
+
+  const totalAuthors = new Set(postData.flatMap((item) => item.emails)).size;
+
+  const filteredPosts = postData.filter((post) =>
+    post.emails.join(" ").toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h2 className="headings">Post Management</h2>
-      <table
-        border="1"
-        cellPadding="8"
-        style={{ width: "100%", textAlign: "left" }}
-      >
+    <div className="post">
+      <div className="section-header">
+        <h2 className="headings">Post Management</h2>
+      </div>
+      <div className="feedback-stats">
+        <div className="stat-card">
+          <h3>{totalPosts}</h3>
+          <p>Total Posts</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>{totalAuthors}</h3>
+          <p>Total Authors</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>{postData.length}</h3>
+          <p>Active Days</p>
+        </div>
+      </div>
+      <div className="post-toolbar">
+        <div className="post-search-wrapper">
+          <input
+            type="text"
+            placeholder="Search by author..."
+            className="search-input-post"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <button
+          className="export-btn"
+          onClick={() => {
+            const csvRows = [
+              ["Date", "Count", "Authors"],
+              ...filteredPosts.map((row) => [
+                row.date,
+                row.count,
+                row.emails.join("; "),
+              ]),
+            ];
+
+            const csvContent = csvRows.map((e) => e.join(",")).join("\n");
+
+            const blob = new Blob([csvContent], { type: "text/csv" });
+
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = "posts.csv";
+            a.click();
+          }}
+        >
+          <Download size={16} />
+          Export CSV
+        </button>
+      </div>
+
+      <table className="posts-table">
         <thead>
           <tr>
             <th>Date</th>
             <th>Count</th>
             <th>Emails</th>
+            <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          {postData.map((row, idx) => (
+          {filteredPosts.map((row, idx) => (
             <tr key={idx}>
               <td>{row.date}</td>
-              <td>{row.count}</td>
+
+              <td>
+                <span className="count-badge">{row.count}</span>
+              </td>
+
               <td>{row.emails.join(", ")}</td>
+
+              <td>
+                <button
+                  className="view-btn"
+                  onClick={() => setSelectedPost(row)}
+                >
+                  View
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {selectedPost && (
+        <div className="modal-overlay">
+          <div className="post-modal-content">
+            <h3>Post Details</h3>
+
+            <p>
+              <strong>Date:</strong> {selectedPost.date}
+            </p>
+
+            <p>
+              <strong>Posts:</strong> {selectedPost.count}
+            </p>
+
+            <p>
+              <strong>Authors:</strong> {selectedPost.emails.join(", ")}
+            </p>
+
+            <button
+              className="post-close-btn"
+              onClick={() => setSelectedPost(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
