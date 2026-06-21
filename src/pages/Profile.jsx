@@ -291,7 +291,7 @@ const Profile = () => {
               <div className="space-y-4">
                 {userPosts.map((post) => (
                   <div key={post.id} className="relative">
-                    <div className="absolute top-3 right-3 z-10 flex gap-2">
+                    <div className="absolute top-16 right-8 z-10 flex gap-2">
                       <button
                         onClick={() => {
                           setEditingPost(post);
