@@ -513,12 +513,14 @@ const ReportsManagement = () => {
                   <td>{getStatusBadge(report.resolved)}</td>
                   <td>{formatDate(report.createdAt)}</td>
                   <td className="actions-cell">
-                    <button
-                      className="action-btn view"
-                      onClick={() => handleViewReport(report)}
-                    >
-                      <Eye size={14} /> View
-                    </button>
+                    {activeReportsTab !== "threshold" && (
+                      <button
+                        className="action-btn view"
+                        onClick={() => handleViewReport(report)}
+                      >
+                        <Eye size={14} /> View
+                      </button>
+                    )}
                     {/* Threshold Tab Delete Post */}
                     {activeReportsTab === "threshold" &&
                       (deletedPosts[report.postId] ? (
