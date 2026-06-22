@@ -24,6 +24,7 @@ const ReportsManagement = () => {
   const [postDetails, setPostDetails] = useState(null);
   const [reporterDetails, setReporterDetails] = useState({});
   const [reportCounts, setReportCounts] = useState({});
+  const [deletedPosts, setDeletedPosts] = useState({});
 
   // Fixed threshold for automatic post deletion
   const REPORT_THRESHOLD = 5;
@@ -35,12 +36,31 @@ const ReportsManagement = () => {
       setReports(data);
       setFilteredReports(data);
       await fetchReporterDetails(data);
+      await checkDeletedPosts(data);
       calculateReportCounts(data);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
+
+  const checkDeletedPosts = async (reportsData) => {
+    const deletedMap = {};
+
+    for (const report of reportsData) {
+      try {
+        const post = await getPostById(report.postId);
+
+        if (!post) {
+          deletedMap[report.postId] = true;
+        }
+      } catch {
+        deletedMap[report.postId] = true;
+      }
+    }
+
+    setDeletedPosts(deletedMap);
+  };
 
   // Fetch Reporter's Details
   const fetchReporterDetails = async (reportData) => {
@@ -74,14 +94,38 @@ const ReportsManagement = () => {
   };
 
   // Calculate report counts for each post
-  const calculateReportCounts = (reportsData) => {
+  const calculateReportCounts = async (reportsData) => {
     const counts = {};
+
     reportsData.forEach((report) => {
       if (report.postId) {
         counts[report.postId] = (counts[report.postId] || 0) + 1;
       }
     });
+
     setReportCounts(counts);
+
+    // Auto delete threshold-hit posts
+    for (const [postId, count] of Object.entries(counts)) {
+      if (count >= REPORT_THRESHOLD) {
+        try {
+          const post = await getPostById(postId);
+
+          if (post) {
+            await deletePost(postId);
+            console.log("post : ", post);
+            await resolveReportsForPost(postId);
+          }
+        } catch (err) {
+          if (err.message === "Post not found") {
+            console.log(`Post ${postId} already deleted`);
+            continue;
+          }
+
+          console.error(err);
+        }
+      }
+    }
   };
 
   // Filter reports based on tab and search term
@@ -476,16 +520,28 @@ const ReportsManagement = () => {
                       <Eye size={14} /> View
                     </button>
                     {/* Threshold Tab Delete Post */}
-                    {activeReportsTab === "threshold" && (
-                      <button
-                        className="action-btn delete"
-                        onClick={() => handleDeleteThresholdPost(report.postId)}
-                        title="Delete Post"
-                      >
-                        <Trash2 size={14} />
-                        Delete Post
-                      </button>
-                    )}
+                    {activeReportsTab === "threshold" &&
+                      (deletedPosts[report.postId] ? (
+                        <button
+                          className="action-btn delete"
+                          onClick={() => handleDeleteReport(report.id)}
+                          title="Delete Report"
+                        >
+                          <Trash2 size={14} />
+                          Delete Report
+                        </button>
+                      ) : (
+                        <button
+                          className="action-btn delete"
+                          onClick={() =>
+                            handleDeleteThresholdPost(report.postId)
+                          }
+                          title="Delete Post"
+                        >
+                          <Trash2 size={14} />
+                          Delete Post
+                        </button>
+                      ))}
 
                     {/* Completed Reports Delete */}
                     {report.resolved && activeReportsTab !== "threshold" && (

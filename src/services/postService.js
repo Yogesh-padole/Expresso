@@ -114,7 +114,7 @@ export const getPostById = async (postId, currentUserId = null) => {
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
-      throw new Error("Post not found");
+      return null;
     }
 
     const data = postSnap.data();
